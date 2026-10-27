@@ -347,7 +347,6 @@ function EngineDetailsInner({ engineId }: { engineId: string }) {
           locale={locale}
           partsCount={partsCount}
           onCopySerial={() => void copySerial()}
-          onEdit={openEdit}
         />
 
         <div className="flex items-stretch gap-1 overflow-x-auto overscroll-x-contain border-t border-[var(--am-border-default)] px-2 py-1.5 sm:px-3 [scrollbar-width:thin]">
@@ -425,11 +424,7 @@ function EngineDetailsInner({ engineId }: { engineId: string }) {
                 />
               </div>
               <div className="grid min-w-0 gap-3 content-start">
-                <DescriptionCard
-                  engine={engine}
-                  locale={locale}
-                  onEdit={openEdit}
-                />
+                <DescriptionCard engine={engine} locale={locale} />
                 <AdditionalCard engine={engine} item={item} locale={locale} />
                 <AlternativesTable rows={alternatives} locale={locale} />
               </div>
@@ -505,7 +500,6 @@ function EngineHeroBand({
   locale,
   partsCount,
   onCopySerial,
-  onEdit,
 }: {
   engine: MarineEngineRecord;
   item: CatalogItem | null;
@@ -513,7 +507,6 @@ function EngineHeroBand({
   locale: Locale;
   partsCount: number;
   onCopySerial: () => void;
-  onEdit: () => void;
 }) {
   const src = useItemImageSrc(item?.id ?? "", item?.imageSrc ?? null);
   const toast = useToast();
@@ -690,18 +683,10 @@ function EngineHeroBand({
 
         {/* Summary */}
         <aside className="flex min-w-0 flex-col overflow-hidden rounded-[var(--am-radius-lg)] border border-[var(--am-border-default)] bg-[var(--am-surface-raised)] shadow-[var(--am-shadow-sm)]">
-          <header className="flex items-center justify-between gap-2 border-b border-[var(--am-border-default)] px-4 py-2.5">
+          <header className="flex items-center border-b border-[var(--am-border-default)] px-4 py-2.5">
             <h2 className="text-[12.5px] font-bold text-[var(--am-navy-900)]">
               {tc(locale, "engines.section.summary")}
             </h2>
-            <button
-              type="button"
-              className="am-focus-ring inline-flex size-8 items-center justify-center rounded-[var(--am-radius-md)] text-[var(--am-blue-700)] hover:bg-[var(--am-surface-page)]"
-              onClick={onEdit}
-              aria-label={tc(locale, "engines.detail.edit")}
-            >
-              <Pencil className="size-3.5" aria-hidden />
-            </button>
           </header>
           <dl className="flex flex-1 flex-col divide-y divide-[var(--am-border-default)]">
             <SummaryRow label={tc(locale, "engines.col.serial")}>
@@ -984,27 +969,17 @@ function SpecsCard({
 function DescriptionCard({
   engine,
   locale,
-  onEdit,
 }: {
   engine: MarineEngineRecord;
   locale: Locale;
-  onEdit: () => void;
 }) {
   const text = engine.notes.trim();
   return (
     <PageSurface fill={false} className="overflow-hidden p-0 shadow-[var(--am-shadow-sm)]">
-      <header className="flex items-center justify-between gap-2 border-b border-[var(--am-border-default)] px-4 py-2.5">
+      <header className="flex items-center border-b border-[var(--am-border-default)] px-4 py-2.5">
         <h2 className="text-[13px] font-bold text-[var(--am-navy-900)]">
           {tc(locale, "engines.section.description")}
         </h2>
-        <button
-          type="button"
-          className="am-focus-ring inline-flex items-center gap-1 rounded-[var(--am-radius-sm)] px-1.5 py-1 text-[12px] font-semibold text-[var(--am-blue-700)] hover:bg-[var(--am-surface-page)]"
-          onClick={onEdit}
-        >
-          <Pencil className="size-3" aria-hidden />
-          {tc(locale, "engines.detail.edit")}
-        </button>
       </header>
       {text ? (
         <div className="px-4 py-3">
