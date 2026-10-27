@@ -1,4 +1,7 @@
-import { sumStockQtyForItem } from "@/lib/inventory-stock-store";
+import {
+  effectiveItemOnHandQty,
+  resolveItemOnHand,
+} from "@/lib/item-on-hand";
 import type { CatalogItem, SparePartRecord } from "@/types/catalog";
 
 export type SpareStockBadgeId =
@@ -10,15 +13,15 @@ export type SpareStockBadgeId =
 /**
  * Prefer live warehouse balances when any exist for the item; otherwise
  * fall back to CatalogItem demo `qtyOnHand`. Never invent warehouse rows.
+ * Delegates to shared `effectiveItemOnHandQty` (see item-on-hand.ts).
  */
 export function effectiveSpareOnHandQty(
   item: CatalogItem | undefined,
 ): number {
-  if (!item) return 0;
-  const warehouseSum = sumStockQtyForItem(item.id);
-  if (warehouseSum != null) return warehouseSum;
-  return item.qtyOnHand;
+  return effectiveItemOnHandQty(item);
 }
+
+export { resolveItemOnHand, effectiveItemOnHandQty };
 
 /** Prefer lifecycle / stock severity for card badges (no invented trends). */
 export function resolveSpareStockBadge(

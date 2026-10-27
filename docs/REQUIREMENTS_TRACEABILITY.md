@@ -123,7 +123,7 @@
 | TA-02-02-04 | 2.2 مدير المخازن | Add stock | Stock | NOT_IMPLEMENTED | Repo inspection | stock routes | Placeholder |
 | TA-02-02-05 | 2.2 مدير المخازن | Issue/stock out | Stock | NOT_IMPLEMENTED | Repo inspection | `/stock-movements` | Placeholder |
 | TA-02-02-06 | 2.2 مدير المخازن | Transfer between warehouses | Transfers | NOT_IMPLEMENTED | Repo inspection | `/stock-transfers` | Placeholder |
-| TA-02-02-07 | 2.2 مدير المخازن | Perform stocktaking | Stocktaking | NOT_IMPLEMENTED | Repo inspection | `/stocktaking` | Placeholder |
+| TA-02-02-07 | 2.2 مدير المخازن | Perform stocktaking | Stocktaking | IMPLEMENTED | Unit + UI 2026-10-27 | `stocktaking-store`, `/stocktaking` | FE-local; see Phase 2 doc |
 | TA-02-02-08 | 2.2 مدير المخازن | Monitor stock balances | Inventory | PARTIALLY_IMPLEMENTED | Repo inspection | `/low-stock`, dashboard | Mock quantities only |
 | TA-02-02-09 | 2.2 مدير المخازن | Monitor low & slow-moving items | Inventory | PARTIALLY_IMPLEMENTED | Repo inspection | `/low-stock` | Low-stock mock list; slow-moving not implemented |
 | TA-02-02-10 | 2.2 مدير المخازن | Monitor stock movements | Movements | NOT_IMPLEMENTED | Repo inspection | `/stock-movements` | Placeholder |
@@ -200,20 +200,20 @@
 
 | ID | Annex Section | Requirement | Module | Current Status | Verification | Related Files | Notes |
 |----|---------------|-------------|--------|----------------|--------------|---------------|-------|
-| TA-05-01 | إدارة المخازن والمخزون | Multi-warehouse independent management | Warehouses | NOT_IMPLEMENTED | Repo inspection | `/warehouses` | Placeholder |
-| TA-05-02 | أمثلة للمخازن | Support warehouse types (main/new/used/engines) | Warehouses | NOT_IMPLEMENTED | Repo inspection | — | Examples are illustrative; no warehouse master |
-| TA-05-03 | عمليات المخزون | Add stock | Inventory | NOT_IMPLEMENTED | Repo inspection | stock routes | Placeholder |
-| TA-05-04 | عمليات المخزون | Goods receipt | Inventory | NOT_IMPLEMENTED | Repo inspection | `/goods-receipts` | Placeholder |
-| TA-05-05 | عمليات المخزون | Stock issue | Inventory | NOT_IMPLEMENTED | Repo inspection | `/stock-movements` | Placeholder |
-| TA-05-06 | عمليات المخزون | Transfer between warehouses | Transfers | NOT_IMPLEMENTED | Repo inspection | `/stock-transfers` | Placeholder |
-| TA-05-07 | عمليات المخزون | Stock adjustment | Adjustments | NOT_IMPLEMENTED | Repo inspection | `/stock-adjustments` | Placeholder |
-| TA-05-08 | عمليات المخزون | Periodic stocktaking | Stocktaking | NOT_IMPLEMENTED | Repo inspection | `/stocktaking` | Placeholder |
-| TA-05-09 | عمليات المخزون | Surprise stocktaking | Stocktaking | NOT_IMPLEMENTED | Repo inspection | `/stocktaking` | Placeholder |
-| TA-05-10 | عمليات المخزون | Item movement history | Movements | NOT_IMPLEMENTED | Repo inspection | `/stock-movements` | Placeholder |
-| TA-05-11 | عمليات المخزون | Current balance per warehouse | Inventory | NOT_IMPLEMENTED | Repo inspection | — | No per-warehouse ledger |
+| TA-05-01 | إدارة المخازن والمخزون | Multi-warehouse independent management | Warehouses | PARTIALLY_IMPLEMENTED | Unit + UI 2026-10-27 | `warehouses-store`, `/warehouses` | FE persist; no server |
+| TA-05-02 | أمثلة للمخازن | Support warehouse types (main/new/used/engines) | Warehouses | PARTIALLY_IMPLEMENTED | UI | `WarehouseKind` + seeds | Illustrative taxonomy |
+| TA-05-03 | عمليات المخزون | Add stock | Inventory | PARTIALLY_IMPLEMENTED | Unit + browser adjust | `receiveStock`, adjustments | Via adjust/GR |
+| TA-05-04 | عمليات المخزون | Goods receipt | Inventory | PARTIALLY_IMPLEMENTED | Unit tests (real GR referenceId) | `goods-receipts-store` | FE only |
+| TA-05-05 | عمليات المخزون | Stock issue | Inventory | PARTIALLY_IMPLEMENTED | Unit + adjust out | `issueStock` | No sales link yet |
+| TA-05-06 | عمليات المخزون | Transfer between warehouses | Transfers | PARTIALLY_IMPLEMENTED | Unit + browser 2026-10-27 | `transferStock`, `/stock-transfers` | Atomic FE transfer |
+| TA-05-07 | عمليات المخزون | Stock adjustment | Adjustments | PARTIALLY_IMPLEMENTED | Browser + unit | `/stock-adjustments` | Minimal UI |
+| TA-05-08 | عمليات المخزون | Periodic stocktaking | Stocktaking | IMPLEMENTED | Unit + UI 2026-10-27 | `stocktaking-store`, `/stocktaking` | Ledger baseline only; browser-local |
+| TA-05-09 | عمليات المخزون | Surprise stocktaking | Stocktaking | IMPLEMENTED | Unit + UI 2026-10-27 | same engine, kind=surprise | Same limitations as TA-05-08 |
+| TA-05-10 | عمليات المخزون | Item movement history | Movements | PARTIALLY_IMPLEMENTED | Browser + unit | `/stock-movements` | Operational list; not formal report |
+| TA-05-11 | عمليات المخزون | Current balance per warehouse | Inventory | PARTIALLY_IMPLEMENTED | Unit + SoT helper + UI | `inventory-stock-store`, `item-on-hand` | Unified display Phase 1 |
 | TA-05-12 | تقارير المخزون | Qty per item | Reports/Inventory | NOT_IMPLEMENTED | Repo inspection | `/reports/inventory` | Placeholder |
 | TA-05-13 | تقارير المخزون | Current inventory value | Reports/Inventory | NOT_IMPLEMENTED | Repo inspection | dashboard mock KPI | Display mock only |
-| TA-05-14 | تقارير المخزون | Low stock items | Inventory | PARTIALLY_IMPLEMENTED | UI inspection | `/low-stock`, dashboard table | Static mock list |
+| TA-05-14 | تقارير المخزون | Low stock items | Inventory | PARTIALLY_IMPLEMENTED | Unit + live UI | `inventory-low-stock` | Uses shared on-hand rule |
 | TA-05-15 | تقارير المخزون | Slow-moving items | Reports | NOT_IMPLEMENTED | Repo inspection | — | Missing |
 | TA-05-16 | تقارير المخزون | Best-selling items | Reports | NOT_IMPLEMENTED | Repo inspection | — | Missing |
 | TA-05-17 | تقارير المخزون | Fast-moving items | Reports | NOT_IMPLEMENTED | Repo inspection | — | Missing |
@@ -463,9 +463,9 @@
 | TA-AC-04 | Acceptance Criteria | Product search | Products | NOT_IMPLEMENTED | Repo inspection | — | Missing |
 | TA-AC-05 | Acceptance Criteria | Marine engines management | Engines | PARTIALLY_IMPLEMENTED | system A–J + build 2026-10-27 | `/marine-engines`, store + directory UI | Frontend CRUD + SoT map; no server/authz |
 | TA-AC-06 | Acceptance Criteria | Link parts to engines | Engines | PARTIALLY_IMPLEMENTED | integration tests 2026-10-27 | `syncEngineCompatibleSpares`, `deleteMarineEngineAndUnlink`, spare form | Bidirectional via spare SoT; FE only |
-| TA-AC-07 | Acceptance Criteria | Warehouses management | Warehouses | NOT_IMPLEMENTED | Repo inspection | — | Missing |
-| TA-AC-08 | Acceptance Criteria | Stock in/out/transfer | Inventory | NOT_IMPLEMENTED | Repo inspection | — | Missing |
-| TA-AC-09 | Acceptance Criteria | Stocktaking operations | Stocktaking | NOT_IMPLEMENTED | Repo inspection | — | Missing |
+| TA-AC-07 | Acceptance Criteria | Warehouses management | Warehouses | PARTIALLY_IMPLEMENTED | UI + unit + details 2026-10-27 | `/warehouses`, `/warehouses/[id]` | FE only; detail page ledger-scoped |
+| TA-AC-08 | Acceptance Criteria | Stock in/out/transfer | Inventory | PARTIALLY_IMPLEMENTED | Unit + browser Phase 1 | stock stores + routes | Stocktaking FE closed (TA-AC-09 partial) |
+| TA-AC-09 | Acceptance Criteria | Stocktaking operations | Stocktaking | PARTIALLY_IMPLEMENTED | Unit + UI Phase 2 | `stocktaking-store`, `/stocktaking` | No server authz / multi-user |
 | TA-AC-10 | Acceptance Criteria | Create purchase orders | Purchasing | PARTIALLY_IMPLEMENTED | Repo inspection | PO pages | Mock only; no create |
 | TA-AC-11 | Acceptance Criteria | Suppliers management | Suppliers | PARTIALLY_IMPLEMENTED | UI inspection | suppliers module | Frontend mock |
 | TA-AC-12 | Acceptance Criteria | Record shipment data | Import | NOT_IMPLEMENTED | Repo inspection | — | Missing |
@@ -683,9 +683,10 @@
 | Items / Spare Parts / Engines | `/items`, `/spare-parts`, `/marine-engines` (+ detail routes) | Design directories + linked details; legacy `/products*` redirects | PARTIALLY_IMPLEMENTED |
 | Marine engines | `/marine-engines`, `/marine-engines/[id]` | FE wizard CRUD + delete cascade + spare/alt/stock/pricing SoT (localStorage); A–J verified 2026-10-27 | PARTIALLY_IMPLEMENTED |
 | Cross reference | `/cross-reference` | Directory + alt CRUD on spare `alternativeLinks`; browser-local | PARTIALLY_IMPLEMENTED |
-| Warehouses | `/warehouses` | Placeholder | NOT_IMPLEMENTED |
-| Stock movements/transfers/adjustments/stocktaking | respective routes | Placeholder | NOT_IMPLEMENTED |
-| Low stock | `/low-stock` | Mock list | PARTIALLY_IMPLEMENTED |
+| Warehouses | `/warehouses` | FE master CRUD + stock aggregate (Phase 1) | PARTIALLY_IMPLEMENTED |
+| Stock movements/transfers/adjustments | respective routes | Ledger + UI Phase 1 | PARTIALLY_IMPLEMENTED |
+| Stocktaking | `/stocktaking` | Phase 2 FE MVP (periodic+surprise, ledger apply) | PARTIALLY_IMPLEMENTED |
+| Low stock | `/low-stock` | Live derived list via shared on-hand | PARTIALLY_IMPLEMENTED |
 | Suppliers | `/suppliers`, `/suppliers/[id]` | Deepest frontend module; in-memory | PARTIALLY_IMPLEMENTED |
 | Purchase orders | `/purchase-orders`, `/[id]` | Mock list + thin detail | PARTIALLY_IMPLEMENTED |
 | Goods receipts | `/goods-receipts` | Placeholder | NOT_IMPLEMENTED |

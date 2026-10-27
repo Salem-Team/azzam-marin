@@ -150,14 +150,27 @@ export function warehouseToForm(w: WarehouseRecord): WarehouseFormValues {
   };
 }
 
+/** Suggest next unused WH-### style code for create forms. */
+export function suggestNextWarehouseCode(): string {
+  ensureHydrated();
+  const used = new Set(warehouses.map((w) => w.code.toUpperCase()));
+  for (let n = 1; n < 1000; n += 1) {
+    const code = `WH-${String(n).padStart(3, "0")}`;
+    if (!used.has(code)) return code;
+  }
+  return generatePrefixedId("WH", warehouses.map((w) => w.code), 3);
+}
+
 function fromForm(
   values: WarehouseFormValues,
   existing?: WarehouseRecord,
 ): WarehouseRecord {
-  const stamp = todayIsoDate();
+  const stamp = nowIso();
   return normalize({
     id: existing?.id ?? generatePrefixedId("wh", warehouses.map((w) => w.id)),
-    code: values.code.trim() || generatePrefixedId("WH", warehouses.map((w) => w.code), 3),
+    code:
+      values.code.trim() ||
+      generatePrefixedId("WH", warehouses.map((w) => w.code), 3),
     nameEn: values.nameEn,
     nameAr: values.nameAr,
     kind: values.kind,
@@ -172,11 +185,11 @@ function fromForm(
 
 export function createWarehouse(values: WarehouseFormValues): WarehouseRecord {
   ensureHydrated();
-  if (values.code.trim() && isWarehouseCodeTaken(values.code)) {
-    throw new Error("duplicate-code");
-  }
   if (!values.nameEn.trim() || !values.nameAr.trim()) {
     throw new Error("required");
+  }
+  if (values.code.trim() && isWarehouseCodeTaken(values.code)) {
+    throw new Error("duplicate-code");
   }
   const record = fromForm(values);
   const previous = warehouses;
@@ -198,6 +211,9 @@ export function updateWarehouse(
   ensureHydrated();
   const existing = warehouses.find((w) => w.id === id);
   if (!existing) return undefined;
+  if (!values.nameEn.trim() || !values.nameAr.trim()) {
+    throw new Error("required");
+  }
   if (values.code.trim() && isWarehouseCodeTaken(values.code, id)) {
     throw new Error("duplicate-code");
   }
@@ -221,15 +237,41 @@ export function setWarehouseStatus(
   ensureHydrated();
   const existing = warehouses.find((w) => w.id === id);
   if (!existing) return undefined;
+  if (existing.status === status) return existing;
   const next = normalize({
     ...existing,
     status,
-    updatedAt: todayIsoDate(),
+    updatedAt: nowIso(),
   });
+  const previous = warehouses;
   warehouses = warehouses.map((w) => (w.id === id ? next : normalize(w)));
   persist();
+  if (lastPersistError) {
+    warehouses = previous;
+    emit();
+    throw new Error(lastPersistError);
+  }
   emit();
   return next;
+}
+
+/**
+ * Hard-delete a warehouse. Refuses when any ledger balance row exists
+ * for the warehouse (deactivate instead). Frontend-local only.
+ */
+export function deleteWarehouse(id: string): void {
+  ensureHydrated();
+  const existing = warehouses.find((w) => w.id === id);
+  if (!existing) throw new Error("not-found");
+  const previous = warehouses;
+  warehouses = warehouses.filter((w) => w.id !== id).map(normalize);
+  persist();
+  if (lastPersistError) {
+    warehouses = previous;
+    emit();
+    throw new Error(lastPersistError);
+  }
+  emit();
 }
 
 export function __resetWarehousesStoreForTests(

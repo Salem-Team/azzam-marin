@@ -78,6 +78,8 @@ import {
   removeItemImageBlob,
   validateItemImageFile,
 } from "@/lib/items/item-images";
+import { useWarehouseStock } from "@/lib/inventory-stock-store";
+import { resolveItemOnHand } from "@/lib/item-on-hand";
 import {
   deleteItem,
   getLastItemPersistError,
@@ -144,6 +146,7 @@ function ItemDetailsInner({ itemCode }: { itemCode: string }) {
   const hydrated = useItemsHydrated();
   const itemLinks = useItemSupplierLinks();
   useMarineEngines();
+  useWarehouseStock();
   const item = items.find(
     (i) => i.itemCode.trim().toUpperCase() === itemCode.trim().toUpperCase(),
   );
@@ -296,7 +299,8 @@ function ItemDetailsInner({ itemCode }: { itemCode: string }) {
   }
 
   const sellEgpLabel = formatMoney(item.sellEgp, "EGP", locale);
-  const lowStock = item.qtyOnHand < item.minStock;
+  const onHand = resolveItemOnHand(item);
+  const lowStock = onHand.qty < item.minStock;
 
   return (
     <PageFrame className="am-page--flow gap-3 lg:gap-3.5">
@@ -526,7 +530,7 @@ function ItemDetailsInner({ itemCode }: { itemCode: string }) {
                 label={tc(locale, "items.header.availableQty")}
                 value={
                   <span dir="ltr">
-                    {item.qtyOnHand}
+                    {onHand.qty}
                     <span className="ms-1 text-[11px] font-semibold opacity-70">
                       {item.unitOfMeasure}
                     </span>
@@ -534,7 +538,12 @@ function ItemDetailsInner({ itemCode }: { itemCode: string }) {
                 }
                 icon={Boxes}
                 tone={lowStock ? "danger" : "navy"}
-                title={tc(locale, "items.inventory.demoNote")}
+                title={tc(
+                  locale,
+                  onHand.source === "ledger"
+                    ? "items.inventory.ledgerNote"
+                    : "items.inventory.demoNote",
+                )}
               />
               <HeaderStat
                 label={tc(locale, "items.header.minStock")}
@@ -878,7 +887,7 @@ function OverviewPanel({
         label: tc(locale, "items.col.minStock"),
         value: `${item.minStock} ${item.unitOfMeasure}`,
         ltr: true,
-        alert: item.qtyOnHand < item.minStock,
+        alert: resolveItemOnHand(item).qty < item.minStock,
       },
       {
         label: tc(locale, "items.col.status"),
@@ -1053,12 +1062,12 @@ function OverviewPanel({
           <div className="grid grid-cols-2 gap-2 p-3 sm:grid-cols-4">
             <MiniStock
               label={tc(locale, "items.inventory.available")}
-              value={String(item.qtyOnHand)}
+              value={String(resolveItemOnHand(item).qty)}
               tone="green"
             />
             <MiniStock
               label={tc(locale, "items.inventory.total")}
-              value="—"
+              value={String(resolveItemOnHand(item).qty)}
               tone="blue"
             />
             <MiniStock
@@ -1073,7 +1082,12 @@ function OverviewPanel({
             />
           </div>
           <p className="border-t border-[var(--am-border-default)] px-3 py-2 text-[11.5px] text-[var(--am-text-secondary)]">
-            {tc(locale, "items.inventory.demoNote")}
+            {tc(
+              locale,
+              resolveItemOnHand(item).source === "ledger"
+                ? "items.inventory.ledgerNote"
+                : "items.inventory.demoNote",
+            )}
           </p>
           <div className="border-t border-[var(--am-border-default)] px-3 py-2.5">
             <Link
@@ -1351,18 +1365,19 @@ function InventoryPanel({
   item: CatalogItem;
   locale: Locale;
 }) {
+  const onHand = resolveItemOnHand(item);
   return (
     <PageSurface fill={false} className="overflow-hidden !shadow-none">
       <div className="grid grid-cols-2 gap-3 p-4 lg:grid-cols-4">
         <MiniStock
           label={tc(locale, "items.inventory.available")}
-          value={String(item.qtyOnHand)}
+          value={String(onHand.qty)}
           tone="green"
           large
         />
         <MiniStock
           label={tc(locale, "items.inventory.total")}
-          value="—"
+          value={String(onHand.qty)}
           tone="blue"
           large
         />
@@ -1383,7 +1398,12 @@ function InventoryPanel({
         {tc(locale, "items.inventory.liveUnavailable")}
       </p>
       <p className="border-t border-[var(--am-border-default)] px-4 py-2 text-[11.5px] text-[var(--am-text-secondary)]">
-        {tc(locale, "items.inventory.demoNote")}
+        {tc(
+          locale,
+          onHand.source === "ledger"
+            ? "items.inventory.ledgerNote"
+            : "items.inventory.demoNote",
+        )}
       </p>
       <div className="border-t border-[var(--am-border-default)] px-4 py-3">
         <Link

@@ -1,5 +1,5 @@
-import { ModulePlaceholder } from "@/components/layout/module-placeholder";
+import { StocktakingDirectory } from "@/components/stocktaking/stocktaking-directory";
 
-export default function Page() {
-  return <ModulePlaceholder />;
+export default function StocktakingPage() {
+  return <StocktakingDirectory />;
 }

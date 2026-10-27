@@ -14,6 +14,7 @@ import {
   StockError,
   transferStock,
   useStockMovements,
+  useWarehouseStock,
 } from "@/lib/inventory-stock-store";
 import { useItems } from "@/lib/items-store";
 import { useWarehouses } from "@/lib/warehouses-store";
@@ -23,6 +24,7 @@ function StockTransfersInner() {
   const { locale } = useLocale();
   const toast = useToast();
   const movements = useStockMovements();
+  useWarehouseStock();
   const items = useItems();
   const warehouses = useWarehouses();
   const [period, setPeriod] = useState<DateRangeValue | undefined>();
@@ -209,6 +211,7 @@ function StockTransfersInner() {
                 <tr>
                   <th className="px-3 py-2.5">{to(locale, "po.item")}</th>
                   <th className="px-3 py-2.5">{to(locale, "stock.from")}</th>
+                  <th className="px-3 py-2.5">{to(locale, "stock.to")}</th>
                   <th className="px-3 py-2.5">{to(locale, "stock.qty")}</th>
                   <th className="px-3 py-2.5">{to(locale, "gr.date")}</th>
                 </tr>
@@ -216,7 +219,8 @@ function StockTransfersInner() {
               <tbody>
                 {transfers.map((m) => {
                   const item = items.find((i) => i.id === m.itemId);
-                  const wh = warehouses.find((w) => w.id === m.warehouseId);
+                  const fromWh = warehouses.find((w) => w.id === m.warehouseId);
+                  const toWh = warehouses.find((w) => w.id === m.toWarehouseId);
                   return (
                     <tr
                       key={m.id}
@@ -230,11 +234,18 @@ function StockTransfersInner() {
                           : m.itemId}
                       </td>
                       <td className="px-3 py-2.5">
-                        {wh
+                        {fromWh
                           ? locale === "ar"
-                            ? wh.nameAr
-                            : wh.nameEn
+                            ? fromWh.nameAr
+                            : fromWh.nameEn
                           : m.warehouseId}
+                      </td>
+                      <td className="px-3 py-2.5">
+                        {toWh
+                          ? locale === "ar"
+                            ? toWh.nameAr
+                            : toWh.nameEn
+                          : (m.toWarehouseId ?? "—")}
                       </td>
                       <td className="px-3 py-2.5 tabular-nums" dir="ltr">
                         {m.qty}

@@ -23,13 +23,98 @@ export type OpsKey =
   | "warehouses.nameAr"
   | "warehouses.kind"
   | "warehouses.address"
+  | "warehouses.addressEn"
+  | "warehouses.addressAr"
   | "warehouses.notes"
+  | "warehouses.form.createTitle"
+  | "warehouses.form.editTitle"
+  | "warehouses.form.create"
+  | "warehouses.form.saveChanges"
+  | "warehouses.form.sectionIdentity"
+  | "warehouses.form.sectionStatus"
+  | "warehouses.form.sectionLocation"
+  | "warehouses.form.codeHint"
+  | "warehouses.form.notesPlaceholder"
+  | "warehouses.form.shortcutSave"
+  | "warehouses.form.discardConfirm"
+  | "warehouses.form.discardTitle"
+  | "warehouses.form.discardConfirmAction"
+  | "warehouses.toast.created"
+  | "warehouses.toast.updated"
+  | "warehouses.toast.activated"
+  | "warehouses.toast.deactivated"
+  | "warehouses.toast.deleted"
+  | "warehouses.statusConfirm.titleActivate"
+  | "warehouses.statusConfirm.titleDeactivate"
+  | "warehouses.statusConfirm.bodyActivate"
+  | "warehouses.statusConfirm.bodyDeactivate"
+  | "warehouses.statusConfirm.confirmActivate"
+  | "warehouses.statusConfirm.confirmDeactivate"
+  | "warehouses.statusConfirm.stockWarning"
+  | "warehouses.delete"
+  | "warehouses.delete.title"
+  | "warehouses.delete.body"
+  | "warehouses.delete.confirm"
+  | "warehouses.delete.blocked"
   | "warehouses.stock"
   | "warehouses.kind.main"
   | "warehouses.kind.new_parts"
   | "warehouses.kind.used_parts"
   | "warehouses.kind.engines"
   | "warehouses.kind.other"
+  | "warehouses.overviewTitle"
+  | "warehouses.overviewHint"
+  | "warehouses.kpi.active"
+  | "warehouses.kpi.items"
+  | "warehouses.kpi.lowStock"
+  | "warehouses.kpi.movements"
+  | "warehouses.balances"
+  | "warehouses.searchBalances"
+  | "warehouses.filterWarehouse"
+  | "warehouses.filterStatus"
+  | "warehouses.allWarehouses"
+  | "warehouses.allStatuses"
+  | "warehouses.col.row"
+  | "warehouses.col.itemCode"
+  | "warehouses.col.itemName"
+  | "warehouses.col.partNumber"
+  | "warehouses.col.oem"
+  | "warehouses.col.manufacturer"
+  | "warehouses.col.warehouse"
+  | "warehouses.col.qty"
+  | "warehouses.col.min"
+  | "warehouses.col.status"
+  | "warehouses.status.available"
+  | "warehouses.status.low"
+  | "warehouses.status.out"
+  | "warehouses.lowStockTitle"
+  | "warehouses.recentMovements"
+  | "warehouses.receive"
+  | "warehouses.issue"
+  | "warehouses.transfer"
+  | "warehouses.qtyUnits"
+  | "warehouses.itemUnits"
+  | "warehouses.shortage"
+  | "warehouses.import"
+  | "warehouses.export"
+  | "warehouses.importUnavailable"
+  | "warehouses.toast.exported"
+  | "warehouses.emptyBalances"
+  | "warehouses.emptyMovements"
+  | "warehouses.emptyLowStock"
+  | "warehouses.columns"
+  | "warehouses.activate"
+  | "warehouses.deactivate"
+  | "warehouses.openItem"
+  | "warehouses.sortBy"
+  | "warehouses.ref"
+  | "warehouses.col.date"
+  | "warehouses.col.type"
+  | "stock.type.receipt"
+  | "stock.type.issue"
+  | "stock.type.transfer_out"
+  | "stock.type.transfer_in"
+  | "stock.type.adjustment"
   | "customers.title"
   | "customers.add"
   | "customers.code"
@@ -111,13 +196,108 @@ const en: Record<OpsKey, string> = {
   "warehouses.nameAr": "Name (Arabic)",
   "warehouses.kind": "Type",
   "warehouses.address": "Address",
+  "warehouses.addressEn": "Address (English)",
+  "warehouses.addressAr": "Address (Arabic)",
   "warehouses.notes": "Notes",
+  "warehouses.form.createTitle": "New warehouse",
+  "warehouses.form.editTitle": "Edit warehouse",
+  "warehouses.form.create": "Create warehouse",
+  "warehouses.form.saveChanges": "Save changes",
+  "warehouses.form.sectionIdentity": "Identity",
+  "warehouses.form.sectionStatus": "Operating status",
+  "warehouses.form.sectionLocation": "Location",
+  "warehouses.form.codeHint":
+    "Codes are stored uppercase. Leave as suggested or enter a unique code.",
+  "warehouses.form.notesPlaceholder": "Internal notes for warehouse staff…",
+  "warehouses.form.shortcutSave": "Ctrl/⌘ + Enter to save",
+  "warehouses.form.discardConfirm":
+    "Unsaved changes will be lost.",
+  "warehouses.form.discardTitle": "Discard changes?",
+  "warehouses.form.discardConfirmAction": "Discard",
+  "warehouses.toast.created": "Warehouse created.",
+  "warehouses.toast.updated": "Warehouse updated.",
+  "warehouses.toast.activated": "Warehouse activated.",
+  "warehouses.toast.deactivated": "Warehouse deactivated.",
+  "warehouses.toast.deleted": "Warehouse deleted.",
+  "warehouses.statusConfirm.titleActivate": "Activate warehouse",
+  "warehouses.statusConfirm.titleDeactivate": "Deactivate warehouse",
+  "warehouses.statusConfirm.bodyActivate":
+    "This warehouse will appear as available for receipts, transfers, and adjustments.",
+  "warehouses.statusConfirm.bodyDeactivate":
+    "The warehouse stays in history and balances are kept. Prefer deactivate over delete when stock exists.",
+  "warehouses.statusConfirm.confirmActivate": "Activate",
+  "warehouses.statusConfirm.confirmDeactivate": "Deactivate",
+  "warehouses.statusConfirm.stockWarning":
+    "This warehouse still has ledger stock: {qty} qty across {items} item line(s). Balances are not removed.",
+  "warehouses.delete": "Delete",
+  "warehouses.delete.title": "Delete warehouse",
+  "warehouses.delete.body":
+    "This permanently removes the warehouse master record from browser storage. This cannot be undone.",
+  "warehouses.delete.confirm": "Delete permanently",
+  "warehouses.delete.blocked":
+    "Cannot delete: ledger has {qty} qty on {items} line(s). Deactivate instead, or clear stock first.",
   "warehouses.stock": "Stock on hand",
   "warehouses.kind.main": "Main",
   "warehouses.kind.new_parts": "New spare parts",
   "warehouses.kind.used_parts": "Used parts",
   "warehouses.kind.engines": "Complete engines",
   "warehouses.kind.other": "Other",
+  "warehouses.overviewTitle": "Inventory & warehouse management",
+  "warehouses.overviewHint":
+    "Monitor item balances across warehouses and manage stock movements.",
+  "warehouses.kpi.active": "Active warehouses",
+  "warehouses.kpi.items": "Catalog items",
+  "warehouses.kpi.lowStock": "Items below minimum",
+  "warehouses.kpi.movements": "Inventory movements",
+  "warehouses.balances": "Inventory balances",
+  "warehouses.searchBalances":
+    "Search by item, code, OEM, Part No, or barcode",
+  "warehouses.filterWarehouse": "Warehouse",
+  "warehouses.filterStatus": "Stock status",
+  "warehouses.allWarehouses": "All warehouses",
+  "warehouses.allStatuses": "All statuses",
+  "warehouses.col.row": "#",
+  "warehouses.col.itemCode": "Item code",
+  "warehouses.col.itemName": "Item name",
+  "warehouses.col.partNumber": "Part number",
+  "warehouses.col.oem": "OEM number",
+  "warehouses.col.manufacturer": "Manufacturer",
+  "warehouses.col.warehouse": "Warehouse",
+  "warehouses.col.qty": "Balance",
+  "warehouses.col.min": "Minimum",
+  "warehouses.col.status": "Status",
+  "warehouses.status.available": "Available",
+  "warehouses.status.low": "Below min",
+  "warehouses.status.out": "Out of stock",
+  "warehouses.lowStockTitle": "Items below minimum",
+  "warehouses.recentMovements": "Recent inventory movements",
+  "warehouses.receive": "Receive goods",
+  "warehouses.issue": "Issue stock",
+  "warehouses.transfer": "Transfer stock",
+  "warehouses.qtyUnits": "Total qty",
+  "warehouses.itemUnits": "Items",
+  "warehouses.shortage": "Shortage",
+  "warehouses.import": "Import",
+  "warehouses.export": "Export",
+  "warehouses.importUnavailable":
+    "Bulk warehouse/stock import is not available in this frontend build. Use goods receipts, transfers, and adjustments to post stock.",
+  "warehouses.toast.exported": "Balances exported.",
+  "warehouses.emptyBalances": "No warehouse ledger balances yet.",
+  "warehouses.emptyMovements": "No inventory movements recorded yet.",
+  "warehouses.emptyLowStock": "No ledger lines below minimum.",
+  "warehouses.columns": "Columns",
+  "warehouses.activate": "Activate",
+  "warehouses.deactivate": "Deactivate",
+  "warehouses.openItem": "Open item",
+  "warehouses.sortBy": "Sort",
+  "warehouses.ref": "Reference",
+  "warehouses.col.date": "Date",
+  "warehouses.col.type": "Type",
+  "stock.type.receipt": "Receive",
+  "stock.type.issue": "Issue",
+  "stock.type.transfer_out": "Transfer out",
+  "stock.type.transfer_in": "Transfer in",
+  "stock.type.adjustment": "Adjustment",
   "customers.title": "Customers",
   "customers.add": "Add customer",
   "customers.code": "Code",
@@ -202,13 +382,108 @@ const ar: Record<OpsKey, string> = {
   "warehouses.nameAr": "الاسم (عربي)",
   "warehouses.kind": "النوع",
   "warehouses.address": "العنوان",
+  "warehouses.addressEn": "العنوان (إنجليزي)",
+  "warehouses.addressAr": "العنوان (عربي)",
   "warehouses.notes": "ملاحظات",
+  "warehouses.form.createTitle": "مخزن جديد",
+  "warehouses.form.editTitle": "تعديل المخزن",
+  "warehouses.form.create": "إنشاء المخزن",
+  "warehouses.form.saveChanges": "حفظ التغييرات",
+  "warehouses.form.sectionIdentity": "الهوية",
+  "warehouses.form.sectionStatus": "حالة التشغيل",
+  "warehouses.form.sectionLocation": "الموقع",
+  "warehouses.form.codeHint":
+    "يُحفظ الكود بأحرف كبيرة. اترك المقترح أو أدخل كوداً فريداً.",
+  "warehouses.form.notesPlaceholder": "ملاحظات داخلية لفريق المخزن…",
+  "warehouses.form.shortcutSave": "Ctrl/⌘ + Enter للحفظ",
+  "warehouses.form.discardConfirm":
+    "سيتم فقدان التغييرات غير المحفوظة.",
+  "warehouses.form.discardTitle": "تجاهل التغييرات؟",
+  "warehouses.form.discardConfirmAction": "تجاهل",
+  "warehouses.toast.created": "تم إنشاء المخزن.",
+  "warehouses.toast.updated": "تم تحديث المخزن.",
+  "warehouses.toast.activated": "تم تفعيل المخزن.",
+  "warehouses.toast.deactivated": "تم إيقاف المخزن.",
+  "warehouses.toast.deleted": "تم حذف المخزن.",
+  "warehouses.statusConfirm.titleActivate": "تفعيل المخزن",
+  "warehouses.statusConfirm.titleDeactivate": "إيقاف المخزن",
+  "warehouses.statusConfirm.bodyActivate":
+    "سيظهر هذا المخزن متاحاً لاستلام البضائع والتحويلات والتسويات.",
+  "warehouses.statusConfirm.bodyDeactivate":
+    "يبقى المخزن في السجل وتُحفظ الأرصدة. يُفضّل الإيقاف على الحذف عند وجود مخزون.",
+  "warehouses.statusConfirm.confirmActivate": "تفعيل",
+  "warehouses.statusConfirm.confirmDeactivate": "إيقاف",
+  "warehouses.statusConfirm.stockWarning":
+    "لا يزال لهذا المخزن رصيد دفتري: {qty} كمية عبر {items} بند/بنود. لن تُحذف الأرصدة.",
+  "warehouses.delete": "حذف",
+  "warehouses.delete.title": "حذف المخزن",
+  "warehouses.delete.body":
+    "سيُحذف سجل المخزن نهائياً من تخزين المتصفح. لا يمكن التراجع.",
+  "warehouses.delete.confirm": "حذف نهائي",
+  "warehouses.delete.blocked":
+    "تعذر الحذف: الدفتر يحتوي {qty} كمية على {items} بند/بنود. أوقف المخزن بدلاً من ذلك، أو صفِّ الرصيد أولاً.",
   "warehouses.stock": "الرصيد المتاح",
   "warehouses.kind.main": "رئيسي",
   "warehouses.kind.new_parts": "قطع غيار جديدة",
   "warehouses.kind.used_parts": "قطع مستعملة",
   "warehouses.kind.engines": "محركات كاملة",
   "warehouses.kind.other": "أخرى",
+  "warehouses.overviewTitle": "إدارة المخزون والمستودعات",
+  "warehouses.overviewHint":
+    "متابعة أرصدة الأصناف عبر المخازن وإدارة حركات المخزون.",
+  "warehouses.kpi.active": "المخازن النشطة",
+  "warehouses.kpi.items": "أصناف الكتالوج",
+  "warehouses.kpi.lowStock": "أصناف تحت الحد الأدنى",
+  "warehouses.kpi.movements": "حركات المخزون",
+  "warehouses.balances": "أرصدة المخزون",
+  "warehouses.searchBalances":
+    "بحث بالصنف أو الكود أو OEM أو رقم القطعة أو الباركود",
+  "warehouses.filterWarehouse": "المخزن",
+  "warehouses.filterStatus": "حالة الرصيد",
+  "warehouses.allWarehouses": "كل المخازن",
+  "warehouses.allStatuses": "كل الحالات",
+  "warehouses.col.row": "#",
+  "warehouses.col.itemCode": "كود الصنف",
+  "warehouses.col.itemName": "اسم الصنف",
+  "warehouses.col.partNumber": "رقم القطعة",
+  "warehouses.col.oem": "رقم OEM",
+  "warehouses.col.manufacturer": "الشركة المصنعة",
+  "warehouses.col.warehouse": "المخزن",
+  "warehouses.col.qty": "الرصيد الحالي",
+  "warehouses.col.min": "الحد الأدنى",
+  "warehouses.col.status": "الحالة",
+  "warehouses.status.available": "متاح",
+  "warehouses.status.low": "تحت الحد",
+  "warehouses.status.out": "نفد المخزون",
+  "warehouses.lowStockTitle": "أصناف تحت الحد الأدنى",
+  "warehouses.recentMovements": "أحدث حركات المخزون",
+  "warehouses.receive": "استلام بضاعة",
+  "warehouses.issue": "صرف مخزون",
+  "warehouses.transfer": "تحويل مخزون",
+  "warehouses.qtyUnits": "إجمالي الكمية",
+  "warehouses.itemUnits": "أصناف",
+  "warehouses.shortage": "نقص",
+  "warehouses.import": "استيراد",
+  "warehouses.export": "تصدير",
+  "warehouses.importUnavailable":
+    "استيراد المخزون بالجملة غير متاح في هذا البناء الأمامي. استخدم استلام البضائع والتحويلات والتسويات لترحيل الرصيد.",
+  "warehouses.toast.exported": "تم تصدير الأرصدة.",
+  "warehouses.emptyBalances": "لا توجد أرصدة دفتر مخزني بعد.",
+  "warehouses.emptyMovements": "لا توجد حركات مخزون مسجّلة بعد.",
+  "warehouses.emptyLowStock": "لا توجد بنود دفتر تحت الحد الأدنى.",
+  "warehouses.columns": "الأعمدة",
+  "warehouses.activate": "تفعيل",
+  "warehouses.deactivate": "إيقاف",
+  "warehouses.openItem": "فتح الصنف",
+  "warehouses.sortBy": "ترتيب",
+  "warehouses.ref": "المرجع",
+  "warehouses.col.date": "التاريخ",
+  "warehouses.col.type": "النوع",
+  "stock.type.receipt": "استلام",
+  "stock.type.issue": "صرف",
+  "stock.type.transfer_out": "تحويل خارج",
+  "stock.type.transfer_in": "تحويل داخل",
+  "stock.type.adjustment": "تسوية",
   "customers.title": "العملاء",
   "customers.add": "إضافة عميل",
   "customers.code": "الكود",

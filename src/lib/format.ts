@@ -102,6 +102,11 @@ export function formatDateTime(
   }).format(d);
 }
 
+/** Locale-aware integer/count display (tabular-friendly when wrapped with `tabular-nums`). */
+export function formatCount(value: number, locale: Locale = "en"): string {
+  return new Intl.NumberFormat(localeTag(locale)).format(value);
+}
+
 /** Display-safe bank account / IBAN — keeps prefix & suffix, masks the middle. */
 export function maskAccountNumber(value: string): string {
   const cleaned = value.replace(/\s+/g, "").trim();

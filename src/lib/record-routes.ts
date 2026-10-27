@@ -41,6 +41,19 @@ export function supplierDetailsHref(
   return `${base}?tab=${encodeURIComponent(options.tab)}`;
 }
 
+export function stocktakingDetailsHref(id: string): string {
+  return `/stocktaking/${encodeURIComponent(id)}`;
+}
+
+export function warehouseDetailsHref(
+  id: string,
+  options?: { tab?: string },
+): string {
+  const base = `/warehouses/${encodeURIComponent(id)}`;
+  if (!options?.tab) return base;
+  return `${base}?tab=${encodeURIComponent(options.tab)}`;
+}
+
 export function decodeRecordParam(param: string): string {
   try {
     return decodeURIComponent(param);

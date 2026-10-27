@@ -6,6 +6,7 @@ import {
   getBrowserLocalStorage,
   nowIso,
 } from "@/lib/browser-entity-store";
+import { logClientActivity } from "@/lib/log-client-activity";
 import { getItemById } from "@/lib/items-store";
 import { getWarehouseById } from "@/lib/warehouses-store";
 import type { WarehouseStockBalance } from "@/types/warehouse";
@@ -29,6 +30,8 @@ export interface StockMovement {
   reason: string;
   referenceType?: string;
   referenceId?: string;
+  /** Client-side idempotency key; duplicate ops return without re-posting. */
+  operationId?: string;
   createdAt: string;
 }
 
@@ -40,7 +43,7 @@ let movements: readonly StockMovement[] = [];
 let hydrated = false;
 let hydrateScheduled = false;
 
-interface PersistedStock {
+export interface PersistedStock {
   balances: WarehouseStockBalance[];
   movements: StockMovement[];
 }
@@ -63,12 +66,33 @@ function isBalance(value: unknown): value is WarehouseStockBalance {
   );
 }
 
+function isMovement(value: unknown): value is StockMovement {
+  if (!value || typeof value !== "object") return false;
+  const r = value as Partial<StockMovement>;
+  return (
+    typeof r.id === "string" &&
+    typeof r.type === "string" &&
+    typeof r.warehouseId === "string" &&
+    typeof r.itemId === "string" &&
+    typeof r.qty === "number"
+  );
+}
+
 function normalizeBalance(b: WarehouseStockBalance): WarehouseStockBalance {
   return {
     warehouseId: b.warehouseId,
     itemId: b.itemId,
     qty: Number.isFinite(b.qty) ? b.qty : 0,
     updatedAt: b.updatedAt || nowIso(),
+  };
+}
+
+function normalizeMovement(m: StockMovement): StockMovement {
+  return {
+    ...m,
+    reason: m.reason ?? "",
+    qty: Number.isFinite(m.qty) ? m.qty : 0,
+    createdAt: m.createdAt || nowIso(),
   };
 }
 
@@ -79,7 +103,7 @@ function persist() {
     const payload: { version: 1 } & PersistedStock = {
       version: 1,
       balances: balances.map(normalizeBalance),
-      movements: [...movements],
+      movements: movements.map(normalizeMovement),
     };
     storage.setItem(STORAGE_KEY, JSON.stringify(payload));
   } catch {
@@ -107,7 +131,9 @@ function applyStored() {
       return;
     }
     balances = (parsed.balances ?? []).filter(isBalance).map(normalizeBalance);
-    movements = Array.isArray(parsed.movements) ? parsed.movements : [];
+    movements = (parsed.movements ?? [])
+      .filter(isMovement)
+      .map(normalizeMovement);
   } catch {
     balances = [];
     movements = [];
@@ -167,7 +193,7 @@ export function getStockQty(warehouseId: string, itemId: string): number {
 
 /**
  * Sum of warehouse balances for an item, or `null` when no balance rows exist
- * (callers then fall back to CatalogItem demo `qtyOnHand`).
+ * (callers then fall back to CatalogItem demo `qtyOnHand` via item-on-hand).
  */
 export function sumStockQtyForItem(itemId: string): number | null {
   ensureHydrated();
@@ -181,6 +207,51 @@ export class StockError extends Error {
     super(code);
     this.name = "StockError";
   }
+}
+
+export function findMovementByOperationId(
+  operationId: string,
+): StockMovement | undefined {
+  ensureHydrated();
+  if (!operationId.trim()) return undefined;
+  return movements.find((m) => m.operationId === operationId);
+}
+
+/** Snapshot for browser-local rollback (e.g. goods receipt). Not a DB transaction. */
+export function captureInventoryStockState(): PersistedStock {
+  ensureHydrated();
+  return {
+    balances: balances.map(normalizeBalance),
+    movements: movements.map(normalizeMovement),
+  };
+}
+
+export function restoreInventoryStockState(state: PersistedStock): void {
+  ensureHydrated();
+  balances = (state.balances ?? []).map(normalizeBalance);
+  movements = (state.movements ?? []).map(normalizeMovement);
+  persist();
+  emit();
+}
+
+function assertPositiveQty(qty: number) {
+  if (!Number.isFinite(qty) || qty <= 0) {
+    throw new StockError("invalid-qty");
+  }
+}
+
+function assertActiveWarehouse(warehouseId: string) {
+  const wh = getWarehouseById(warehouseId);
+  if (!wh) throw new StockError("unknown-warehouse");
+  if (wh.status !== "active") throw new StockError("inactive-warehouse");
+  return wh;
+}
+
+function assertStockableItem(itemId: string) {
+  const item = getItemById(itemId);
+  if (!item) throw new StockError("unknown-item");
+  if (item.status !== "active") throw new StockError("inactive-item");
+  return item;
 }
 
 function setBalance(warehouseId: string, itemId: string, qty: number) {
@@ -212,8 +283,22 @@ function pushMovement(
   return record;
 }
 
-/** Increase stock (receipt / transfer in / positive adjustment). */
-export function receiveStock(input: {
+function logStockMutation(input: {
+  action: string;
+  itemId: string;
+  summaryEn: string;
+  summaryAr: string;
+}) {
+  logClientActivity({
+    entityType: "stock",
+    entityId: input.itemId,
+    action: input.action,
+    summaryEn: input.summaryEn,
+    summaryAr: input.summaryAr,
+  });
+}
+
+export type ReceiveStockInput = {
   warehouseId: string;
   itemId: string;
   qty: number;
@@ -221,42 +306,57 @@ export function receiveStock(input: {
   referenceType?: string;
   referenceId?: string;
   type?: StockMovementType;
-}): StockMovement {
+  operationId?: string;
+  /** When true, caller logs activity (e.g. atomic transfer). */
+  skipActivity?: boolean;
+  toWarehouseId?: string;
+};
+
+/** Increase stock (receipt / transfer in / positive adjustment). */
+export function receiveStock(input: ReceiveStockInput): StockMovement {
   ensureHydrated();
-  if (!getWarehouseById(input.warehouseId)) {
-    throw new StockError("unknown-warehouse");
+  if (input.operationId) {
+    const existing = findMovementByOperationId(input.operationId);
+    if (existing) return existing;
   }
-  if (!getItemById(input.itemId)) throw new StockError("unknown-item");
-  if (!Number.isFinite(input.qty) || input.qty <= 0) {
-    throw new StockError("invalid-qty");
-  }
+  assertActiveWarehouse(input.warehouseId);
+  assertStockableItem(input.itemId);
+  assertPositiveQty(input.qty);
+
+  const type = input.type ?? "receipt";
   const next = getStockQty(input.warehouseId, input.itemId) + input.qty;
   setBalance(input.warehouseId, input.itemId, next);
   const movement = pushMovement({
-    type: input.type ?? "receipt",
+    type,
     warehouseId: input.warehouseId,
+    toWarehouseId: input.toWarehouseId,
     itemId: input.itemId,
     qty: input.qty,
     reason: input.reason ?? "",
     referenceType: input.referenceType,
     referenceId: input.referenceId,
+    operationId: input.operationId,
   });
   persist();
   emit();
-  void import("@/lib/log-client-activity").then(({ logClientActivity }) => {
-    logClientActivity({
-      entityType: "stock",
-      entityId: input.itemId,
-      action: "receive",
-      summaryEn: `Received ${input.qty} into warehouse ${input.warehouseId}`,
-      summaryAr: `استلام ${input.qty} إلى المخزن ${input.warehouseId}`,
+  if (!input.skipActivity) {
+    const action =
+      type === "adjustment"
+        ? "adjust"
+        : type === "transfer_in"
+          ? "transfer"
+          : "receive";
+    logStockMutation({
+      action,
+      itemId: input.itemId,
+      summaryEn: `Stock ${type}: +${input.qty} at warehouse ${input.warehouseId}`,
+      summaryAr: `مخزون ${type}: +${input.qty} في المخزن ${input.warehouseId}`,
     });
-  });
+  }
   return movement;
 }
 
-/** Decrease stock (issue / transfer out / negative adjustment). */
-export function issueStock(input: {
+export type IssueStockInput = {
   warehouseId: string;
   itemId: string;
   qty: number;
@@ -265,58 +365,138 @@ export function issueStock(input: {
   referenceId?: string;
   type?: StockMovementType;
   allowNegative?: boolean;
-}): StockMovement {
+  operationId?: string;
+  skipActivity?: boolean;
+  toWarehouseId?: string;
+};
+
+/** Decrease stock (issue / transfer out / negative adjustment). */
+export function issueStock(input: IssueStockInput): StockMovement {
   ensureHydrated();
-  if (!getWarehouseById(input.warehouseId)) {
-    throw new StockError("unknown-warehouse");
+  if (input.operationId) {
+    const existing = findMovementByOperationId(input.operationId);
+    if (existing) return existing;
   }
-  if (!getItemById(input.itemId)) throw new StockError("unknown-item");
-  if (!Number.isFinite(input.qty) || input.qty <= 0) {
-    throw new StockError("invalid-qty");
-  }
+  assertActiveWarehouse(input.warehouseId);
+  assertStockableItem(input.itemId);
+  assertPositiveQty(input.qty);
+
   const current = getStockQty(input.warehouseId, input.itemId);
   if (!input.allowNegative && current < input.qty) {
     throw new StockError("insufficient-stock");
   }
+  const type = input.type ?? "issue";
   setBalance(input.warehouseId, input.itemId, current - input.qty);
   const movement = pushMovement({
-    type: input.type ?? "issue",
+    type,
     warehouseId: input.warehouseId,
+    toWarehouseId: input.toWarehouseId,
     itemId: input.itemId,
     qty: input.qty,
     reason: input.reason ?? "",
     referenceType: input.referenceType,
     referenceId: input.referenceId,
+    operationId: input.operationId,
   });
   persist();
   emit();
+  if (!input.skipActivity) {
+    const action =
+      type === "adjustment"
+        ? "adjust"
+        : type === "transfer_out"
+          ? "transfer"
+          : "issue";
+    logStockMutation({
+      action,
+      itemId: input.itemId,
+      summaryEn: `Stock ${type}: -${input.qty} from warehouse ${input.warehouseId}`,
+      summaryAr: `مخزون ${type}: -${input.qty} من المخزن ${input.warehouseId}`,
+    });
+  }
   return movement;
 }
 
-export function transferStock(input: {
+export type TransferStockInput = {
   fromWarehouseId: string;
   toWarehouseId: string;
   itemId: string;
   qty: number;
   reason?: string;
-}): void {
+  referenceType?: string;
+  referenceId?: string;
+  operationId?: string;
+};
+
+/**
+ * Atomic browser-local transfer: both balances + both movements commit together
+ * in one persist. Not a server transaction — concurrent tabs can still race.
+ */
+export function transferStock(input: TransferStockInput): {
+  out: StockMovement;
+  in: StockMovement;
+} {
+  ensureHydrated();
   if (input.fromWarehouseId === input.toWarehouseId) {
     throw new StockError("same-warehouse");
   }
-  issueStock({
+  const outOp = input.operationId
+    ? `${input.operationId}:out`
+    : undefined;
+  const inOp = input.operationId ? `${input.operationId}:in` : undefined;
+  if (outOp && inOp) {
+    const existingOut = findMovementByOperationId(outOp);
+    const existingIn = findMovementByOperationId(inOp);
+    if (existingOut && existingIn) {
+      return { out: existingOut, in: existingIn };
+    }
+  }
+
+  assertActiveWarehouse(input.fromWarehouseId);
+  assertActiveWarehouse(input.toWarehouseId);
+  assertStockableItem(input.itemId);
+  assertPositiveQty(input.qty);
+
+  const fromQty = getStockQty(input.fromWarehouseId, input.itemId);
+  if (fromQty < input.qty) {
+    throw new StockError("insufficient-stock");
+  }
+
+  const toQty = getStockQty(input.toWarehouseId, input.itemId);
+  setBalance(input.fromWarehouseId, input.itemId, fromQty - input.qty);
+  setBalance(input.toWarehouseId, input.itemId, toQty + input.qty);
+
+  const out = pushMovement({
+    type: "transfer_out",
     warehouseId: input.fromWarehouseId,
+    toWarehouseId: input.toWarehouseId,
     itemId: input.itemId,
     qty: input.qty,
-    reason: input.reason,
-    type: "transfer_out",
+    reason: input.reason ?? "",
+    referenceType: input.referenceType,
+    referenceId: input.referenceId,
+    operationId: outOp,
   });
-  receiveStock({
+  const inbound = pushMovement({
+    type: "transfer_in",
     warehouseId: input.toWarehouseId,
     itemId: input.itemId,
     qty: input.qty,
-    reason: input.reason,
-    type: "transfer_in",
+    reason: input.reason ?? "",
+    referenceType: input.referenceType,
+    referenceId: input.referenceId,
+    operationId: inOp,
   });
+
+  persist();
+  emit();
+  logStockMutation({
+    action: "transfer",
+    itemId: input.itemId,
+    summaryEn: `Transferred ${input.qty} from ${input.fromWarehouseId} to ${input.toWarehouseId}`,
+    summaryAr: `تحويل ${input.qty} من ${input.fromWarehouseId} إلى ${input.toWarehouseId}`,
+  });
+  return { out, in: inbound };
 }
 
 export function __resetInventoryStockStoreForTests(): void {

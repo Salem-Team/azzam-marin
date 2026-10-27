@@ -10,12 +10,18 @@ import {
   saveJsonRecords,
   todayIsoDate,
 } from "@/lib/browser-entity-store";
-import { receiveStock } from "@/lib/inventory-stock-store";
+import {
+  captureInventoryStockState,
+  receiveStock,
+  restoreInventoryStockState,
+  StockError,
+} from "@/lib/inventory-stock-store";
 import {
   applyReceiptToPurchaseOrder,
   getPurchaseOrderById,
   outstandingQty,
 } from "@/lib/purchase-orders-store";
+import { getItemById } from "@/lib/items-store";
 import { getWarehouseById } from "@/lib/warehouses-store";
 
 const STORAGE_KEY = "azzam-marine:goods-receipts:v1";
@@ -132,6 +138,11 @@ export class GoodsReceiptError extends Error {
   }
 }
 
+/**
+ * Creates a goods receipt and posts stock in one browser-local attempt.
+ * Stock is snapshotted and restored if posting fails mid-way.
+ * Remaining limitation: not multi-tab ACID; concurrent tabs can race.
+ */
 export function createGoodsReceipt(
   values: GoodsReceiptFormValues,
 ): GoodsReceiptRecord {
@@ -145,14 +156,21 @@ export function createGoodsReceipt(
   ) {
     throw new GoodsReceiptError("po-not-receivable");
   }
-  if (!getWarehouseById(values.warehouseId)) {
-    throw new GoodsReceiptError("unknown-warehouse");
+  const warehouse = getWarehouseById(values.warehouseId);
+  if (!warehouse) throw new GoodsReceiptError("unknown-warehouse");
+  if (warehouse.status !== "active") {
+    throw new GoodsReceiptError("inactive-warehouse");
   }
 
   const lines: GoodsReceiptLine[] = [];
   for (const form of values.lines) {
     const qty = Number(form.quantity);
     if (!form.itemId || !Number.isFinite(qty) || qty <= 0) continue;
+    const item = getItemById(form.itemId);
+    if (!item) throw new GoodsReceiptError("unknown-item");
+    if (item.status !== "active") {
+      throw new GoodsReceiptError("inactive-item");
+    }
     const poLine = po.lines.find((l) => l.itemId === form.itemId);
     if (!poLine) throw new GoodsReceiptError("item-not-on-po");
     if (qty > outstandingQty(poLine) + 1e-9) {
@@ -162,44 +180,62 @@ export function createGoodsReceipt(
   }
   if (!lines.length) throw new GoodsReceiptError("lines-required");
 
-  // Stock + PO updates first; rollback not full ACID — demo frontend.
-  for (const line of lines) {
-    receiveStock({
-      warehouseId: values.warehouseId,
-      itemId: line.itemId,
-      qty: line.quantity,
-      reason: `Goods receipt for ${po.number}`,
-      referenceType: "goods-receipt",
-      referenceId: "pending",
-    });
-  }
-  applyReceiptToPurchaseOrder(
-    po.id,
-    lines.map((l) => ({ itemId: l.itemId, qty: l.quantity })),
+  const recordId = generatePrefixedId(
+    "gr",
+    receipts.map((r) => r.id),
+  );
+  const recordNumber = generatePrefixedId(
+    "GR",
+    receipts.map((r) => r.number),
+    4,
   );
 
-  const record = normalize({
-    id: generatePrefixedId(
-      "gr",
-      receipts.map((r) => r.id),
-    ),
-    number: generatePrefixedId(
-      "GR",
-      receipts.map((r) => r.number),
-      4,
-    ),
-    purchaseOrderId: po.id,
-    warehouseId: values.warehouseId,
-    receiptDate: values.receiptDate || todayIsoDate(),
-    notes: values.notes,
-    lines,
-    createdAt: nowIso(),
-  });
+  const stockSnapshot = captureInventoryStockState();
+  const previousReceipts = receipts;
 
-  receipts = [record, ...receipts.map(normalize)];
-  persist();
-  emit();
-  return record;
+  try {
+    for (const line of lines) {
+      receiveStock({
+        warehouseId: values.warehouseId,
+        itemId: line.itemId,
+        qty: line.quantity,
+        reason: `Goods receipt ${recordNumber} for ${po.number}`,
+        referenceType: "goods-receipt",
+        referenceId: recordId,
+        operationId: `${recordId}:${line.itemId}`,
+        type: "receipt",
+      });
+    }
+    applyReceiptToPurchaseOrder(
+      po.id,
+      lines.map((l) => ({ itemId: l.itemId, qty: l.quantity })),
+    );
+
+    const record = normalize({
+      id: recordId,
+      number: recordNumber,
+      purchaseOrderId: po.id,
+      warehouseId: values.warehouseId,
+      receiptDate: values.receiptDate || todayIsoDate(),
+      notes: values.notes,
+      lines,
+      createdAt: nowIso(),
+    });
+
+    receipts = [record, ...receipts.map(normalize)];
+    persist();
+    emit();
+    return record;
+  } catch (err) {
+    restoreInventoryStockState(stockSnapshot);
+    receipts = previousReceipts;
+    persist();
+    emit();
+    if (err instanceof GoodsReceiptError || err instanceof StockError) {
+      throw err;
+    }
+    throw new GoodsReceiptError("posting-failed");
+  }
 }
 
 export function __resetGoodsReceiptsStoreForTests(): void {

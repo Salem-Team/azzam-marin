@@ -1,9 +1,9 @@
 /**
  * Low-stock rows derived from CatalogItem + warehouse balances.
- * Prefers warehouse sum when balances exist; else demo qtyOnHand.
+ * Uses shared item-on-hand rule (ledger when rows exist; else catalog-demo).
  */
 
-import { sumStockQtyForItem } from "@/lib/inventory-stock-store";
+import { effectiveItemOnHandQty } from "@/lib/item-on-hand";
 import { listItems } from "@/lib/items-store";
 import type { CatalogItem } from "@/types/catalog";
 
@@ -19,8 +19,7 @@ export interface LowStockRow {
 }
 
 function onHandFor(item: CatalogItem): number {
-  const wh = sumStockQtyForItem(item.id);
-  return wh != null ? wh : item.qtyOnHand;
+  return effectiveItemOnHandQty(item);
 }
 
 /** Active items at or below min stock (including zero). */

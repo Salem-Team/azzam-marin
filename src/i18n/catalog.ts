@@ -291,6 +291,7 @@ export type CatalogKey =
   | "items.inventory.reserved"
   | "items.inventory.viewDetails"
   | "items.inventory.demoNote"
+  | "items.inventory.ledgerNote"
   | "items.gallery.noImage"
   | "items.overview.description"
   | "items.overview.quickInfo"
@@ -298,6 +299,7 @@ export type CatalogKey =
   | "items.inventory.liveUnavailable"
   | "items.inventory.minThreshold"
   | "items.inventory.demoOnHand"
+  | "items.inventory.onHand"
   | "items.inventory.linkModule"
   | "items.activity.localNote"
   | "items.activity.empty"
@@ -1030,16 +1032,19 @@ const en: Record<CatalogKey, string> = {
   "items.inventory.reserved": "Reserved",
   "items.inventory.viewDetails": "View inventory details",
   "items.inventory.demoNote":
-    "On-hand figures are demo thresholds only — not live warehouse balances.",
+    "No warehouse ledger rows yet — showing catalog demo qty (not a verified count).",
+  "items.inventory.ledgerNote":
+    "On-hand from the browser warehouse ledger (not a multi-user server balance).",
   "items.gallery.noImage": "No image",
   "items.overview.description": "Description",
   "items.overview.quickInfo": "Quick info",
   "items.overview.featuresUnavailable":
     "Feature bullets are not stored on the item master in this frontend phase.",
   "items.inventory.liveUnavailable":
-    "Live warehouse quantities are not connected. Demo on-hand is for UI thresholds only.",
+    "Per-warehouse balances come from the browser stock ledger when posted; otherwise catalog demo qty is shown.",
   "items.inventory.minThreshold": "Minimum stock threshold",
-  "items.inventory.demoOnHand": "Demo on-hand (not live)",
+  "items.inventory.demoOnHand": "On hand",
+  "items.inventory.onHand": "On hand",
   "items.inventory.linkModule": "Open inventory module",
   "items.activity.localNote":
     "Local UI activity from this browser store — not the annex server audit log.",
@@ -1808,16 +1813,19 @@ const ar: Record<CatalogKey, string> = {
   "items.inventory.reserved": "المحجوز",
   "items.inventory.viewDetails": "عرض تفاصيل المخزون",
   "items.inventory.demoNote":
-    "أرقام الكمية تجريبية للعتبات فقط — وليست أرصدة مستودع حية.",
+    "لا توجد صفوف دفتر مخزن بعد — تُعرض كمية الكتالوج التجريبية (ليست جردًا مؤكدًا).",
+  "items.inventory.ledgerNote":
+    "الكمية من دفتر المخازن في المتصفح (وليست رصيد خادم متعدد المستخدمين).",
   "items.gallery.noImage": "لا توجد صورة",
   "items.overview.description": "الوصف",
   "items.overview.quickInfo": "معلومات سريعة",
   "items.overview.featuresUnavailable":
     "نقاط المميزات غير مخزّنة على بطاقة الصنف في هذه المرحلة الأمامية.",
   "items.inventory.liveUnavailable":
-    "كميات المستودع الحية غير متصلة. الكمية التجريبية للعتبات فقط.",
+    "أرصدة المخازن من دفتر المخزون في المتصفح عند الترحيل؛ وإلا تُعرض كمية الكتالوج التجريبية.",
   "items.inventory.minThreshold": "حد المخزون الأدنى",
-  "items.inventory.demoOnHand": "كمية تجريبية (ليست حية)",
+  "items.inventory.demoOnHand": "المتاح",
+  "items.inventory.onHand": "المتاح",
   "items.inventory.linkModule": "فتح وحدة المخزون",
   "items.activity.localNote":
     "نشاط واجهة محلي من مخزن المتصفح — وليس سجل التدقيق الخادمي في الملحق.",

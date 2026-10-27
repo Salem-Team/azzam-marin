@@ -10,12 +10,11 @@ import type {
 } from "@/types/catalog";
 import type { Locale } from "@/types/i18n";
 import type { DateRangeValue } from "@/lib/date-range";
-import { sumStockQtyForItem } from "@/lib/inventory-stock-store";
+import { effectiveItemOnHandQty } from "@/lib/item-on-hand";
 
-/** Warehouse sum when balances exist; else CatalogItem demo qtyOnHand. */
+/** Shared on-hand rule (ledger when rows exist; else catalog-demo). */
 function effectiveOnHand(item: CatalogItem): number {
-  const wh = sumStockQtyForItem(item.id);
-  return wh != null ? wh : item.qtyOnHand;
+  return effectiveItemOnHandQty(item);
 }
 
 export type ItemSortId =
@@ -415,7 +414,7 @@ export function countActiveSpareFilters(
 
 /**
  * Spare Parts directory KPIs from specialized records + linked item spine.
- * Stock thresholds prefer warehouse balances when present; else demo qtyOnHand.
+ * Stock thresholds use shared item-on-hand (ledger or catalog-demo fallback).
  */
 export function summarizeSparePartsKpis(
   parts: readonly SparePartRecord[],

@@ -79,6 +79,7 @@ function StockMovementsInner() {
                   <th className="px-3 py-2.5">{to(locale, "gr.date")}</th>
                   <th className="px-3 py-2.5">{to(locale, "po.status")}</th>
                   <th className="px-3 py-2.5">{to(locale, "gr.warehouse")}</th>
+                  <th className="px-3 py-2.5">{to(locale, "stock.to")}</th>
                   <th className="px-3 py-2.5">{to(locale, "po.item")}</th>
                   <th className="px-3 py-2.5">{to(locale, "stock.qty")}</th>
                   <th className="px-3 py-2.5">{to(locale, "stock.reason")}</th>
@@ -88,6 +89,7 @@ function StockMovementsInner() {
                 {filtered.map((m) => {
                   const item = items.find((i) => i.id === m.itemId);
                   const wh = warehouses.find((w) => w.id === m.warehouseId);
+                  const toWh = warehouses.find((w) => w.id === m.toWarehouseId);
                   return (
                     <tr
                       key={m.id}
@@ -105,6 +107,13 @@ function StockMovementsInner() {
                             ? wh.nameAr
                             : wh.nameEn
                           : m.warehouseId}
+                      </td>
+                      <td className="px-3 py-2.5">
+                        {toWh
+                          ? locale === "ar"
+                            ? toWh.nameAr
+                            : toWh.nameEn
+                          : (m.toWarehouseId ?? "—")}
                       </td>
                       <td className="px-3 py-2.5">
                         {item

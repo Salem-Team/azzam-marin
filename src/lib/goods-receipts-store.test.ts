@@ -9,6 +9,7 @@ import {
 import {
   __resetInventoryStockStoreForTests,
   getStockQty,
+  listStockMovements,
 } from "@/lib/inventory-stock-store";
 import { __resetItemsStoreForTests } from "@/lib/items-store";
 import {
@@ -108,7 +109,7 @@ describe("goods-receipts-store", () => {
     setPurchaseOrderStatus(draft.id, "approved");
 
     const whId = INITIAL_WAREHOUSES[0]!.id;
-    createGoodsReceipt({
+    const gr = createGoodsReceipt({
       purchaseOrderId: draft.id,
       warehouseId: whId,
       receiptDate: "2026-03-02",
@@ -120,6 +121,14 @@ describe("goods-receipts-store", () => {
     const po = getPurchaseOrderById(draft.id)!;
     assert.equal(po.lines[0]!.receivedQty, 4);
     assert.equal(po.status, "partially_received");
+    const receiptMoves = listStockMovements().filter(
+      (m) => m.referenceType === "goods-receipt",
+    );
+    assert.ok(receiptMoves.length >= 1);
+    for (const m of receiptMoves) {
+      assert.equal(m.referenceId, gr.id);
+      assert.notEqual(m.referenceId, "pending");
+    }
   });
 
   it("rejects over-receipt", () => {

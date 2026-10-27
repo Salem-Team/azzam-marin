@@ -64,6 +64,7 @@ import {
   useWarehouseStock,
   type StockMovementType,
 } from "@/lib/inventory-stock-store";
+import { resolveItemOnHand } from "@/lib/item-on-hand";
 import { useItemSupplierLinks } from "@/lib/item-suppliers-store";
 import {
   ITEM_IMAGE_ACCEPT_ATTR,
@@ -688,10 +689,19 @@ function SparePartDetailsInner({ partId }: { partId: string }) {
                       : "text-[var(--am-navy-900)]",
                   )}
                   dir="ltr"
-                  title={tc(locale, "spare.stock.demoHint")}
+                  title={
+                    item
+                      ? tc(
+                          locale,
+                          resolveItemOnHand(item).source === "ledger"
+                            ? "items.inventory.ledgerNote"
+                            : "items.inventory.demoNote",
+                        )
+                      : undefined
+                  }
                 >
                   {item
-                    ? `${item.qtyOnHand} ${item.unitOfMeasure}`
+                    ? `${resolveItemOnHand(item).qty} ${item.unitOfMeasure}`
                     : "—"}
                 </p>
                 <p className="mt-2 text-[11px] font-semibold text-[var(--am-text-secondary)]">
@@ -947,7 +957,9 @@ function OverviewPanel({
       label: tc(locale, "items.col.minStock"),
       value: item ? `${item.minStock} ${item.unitOfMeasure}` : "—",
       ltr: true,
-      alert: item ? item.qtyOnHand < item.minStock : false,
+      alert: item
+        ? resolveItemOnHand(item).qty < item.minStock
+        : false,
     },
     {
       label: tc(locale, "items.col.status"),
@@ -1105,13 +1117,13 @@ function InventoryTab({
       <PageSurface fill={false} className="overflow-hidden !shadow-none">
         <div className="grid grid-cols-2 gap-3 p-4 lg:grid-cols-4">
           <MiniStat
-            label={tc(locale, "items.inventory.demoOnHand")}
-            value={item ? String(item.qtyOnHand) : "—"}
+            label={tc(locale, "items.inventory.onHand")}
+            value={item ? String(resolveItemOnHand(item).qty) : "—"}
             tone="green"
           />
           <MiniStat
             label={tc(locale, "items.inventory.total")}
-            value="—"
+            value={item ? String(resolveItemOnHand(item).qty) : "—"}
             tone="blue"
           />
           <MiniStat

@@ -250,7 +250,7 @@ Columns: ID · Requirement · Module · Priority · Status · Evidence · Missin
 | TA-02-02-04 | Add stock | Stock | P2 | MISSING | Repo inspection; stock routes | Not implemented | — | Partial | Implement frontend workflow per roadmap priority |
 | TA-02-02-05 | Issue/stock out | Stock | P2 | MISSING | Repo inspection; `/stock-movements` | Not implemented | — | Partial | Implement frontend workflow per roadmap priority |
 | TA-02-02-06 | Transfer between warehouses | Transfers | P2 | MISSING | Repo inspection; `/stock-transfers` | Not implemented | — | Partial | Implement frontend workflow per roadmap priority |
-| TA-02-02-07 | Perform stocktaking | Stocktaking | P2 | MISSING | Repo inspection; `/stocktaking` | Not implemented | — | Partial | Implement frontend workflow per roadmap priority |
+| TA-02-02-07 | Perform stocktaking | Stocktaking | P2 | IMPLEMENTED | Unit `stocktaking-store.test.ts` + UI `/stocktaking` | FE session lifecycle + ledger apply | Browser-local; approval not server RBAC | Partial (production) | See `INVENTORY_STOCKTAKING_PHASE2.md` |
 | TA-02-02-08 | Monitor stock balances | Inventory | P1 | PARTIAL | Repo inspection; `/low-stock`, dashboard | Mock quantities only | — | Yes (for production) | Close documented frontend gaps; do not claim production complete |
 | TA-02-02-09 | Monitor low & slow-moving items | Inventory | P1 | PARTIAL | Repo inspection; `/low-stock` | Low-stock mock list; slow-moving not implemented | — | Yes (for production) | Close documented frontend gaps; do not claim production complete |
 | TA-02-02-10 | Monitor stock movements | Movements | P2 | MISSING | Repo inspection; `/stock-movements` | Not implemented | — | Partial | Implement frontend workflow per roadmap priority |
@@ -321,20 +321,20 @@ Columns: ID · Requirement · Module · Priority · Status · Evidence · Missin
 
 | ID | Requirement | Module | Pri | Status | Evidence | Missing | Deps | Backend? | Next action |
 |----|-------------|--------|-----|--------|----------|---------|------|----------|-------------|
-| TA-05-01 | Multi-warehouse independent management | Warehouses | P1 | PARTIAL | `/warehouses` + `warehouses-store`; create/edit; unit tests 2026-10-22 | No server; no detail route depth | Items | Partial (UI now; APIs later) | Deepen WH details; keep FE persist |
+| TA-05-01 | Multi-warehouse independent management | Warehouses | P1 | PARTIAL | `/warehouses` + `warehouses-store`; create/edit; unit tests; inactive WH blocked on stock ops (2026-10-27 Phase 1) | No server; no detail route depth | Items | Partial (UI now; APIs later) | Deepen WH details; keep FE persist |
 | TA-05-02 | Support warehouse types (main/new/used/engines) | Warehouses | P1 | PARTIAL | Warehouse `kind` enum + seed types; directory filters | Limited taxonomy vs ops reality | — | Partial (UI now; APIs later) | Keep kinds aligned with annex examples |
-| TA-05-03 | Add stock | Inventory | P1 | PARTIAL | `inventory-stock-store.receiveStock`; GR path | No standalone “add stock” form UI | Warehouses, Items | Partial (UI now; APIs later) | Add adjustment/add UI |
-| TA-05-04 | Goods receipt | Inventory | P1 | PARTIAL | `/goods-receipts` + `goods-receipts-store`; PO outstanding; stock update; unit tests | No server GR posting | PO, Warehouses | Partial (UI now; APIs later) | Browser QA + partial receipt UX polish |
-| TA-05-05 | Stock issue | Inventory | P1 | MISSING | Repo inspection; `/stock-movements` | Not implemented | — | Yes (for production) | Implement frontend workflow per roadmap priority |
-| TA-05-06 | Transfer between warehouses | Transfers | P2 | MISSING | Repo inspection; `/stock-transfers` | Not implemented | — | Partial | Implement frontend workflow per roadmap priority |
-| TA-05-07 | Stock adjustment | Adjustments | P2 | MISSING | Repo inspection; `/stock-adjustments` | Not implemented | — | Partial | Implement frontend workflow per roadmap priority |
-| TA-05-08 | Periodic stocktaking | Stocktaking | P2 | MISSING | Repo inspection; `/stocktaking` | Not implemented | — | Partial | Implement frontend workflow per roadmap priority |
-| TA-05-09 | Surprise stocktaking | Stocktaking | P2 | MISSING | Repo inspection; `/stocktaking` | Not implemented | — | Partial | Implement frontend workflow per roadmap priority |
-| TA-05-10 | Item movement history | Movements | P2 | MISSING | Repo inspection; `/stock-movements` | Not implemented | — | Partial | Implement frontend workflow per roadmap priority |
-| TA-05-11 | Current balance per warehouse | Inventory | P1 | MISSING | Repo inspection | Not implemented | — | Yes (for production) | Implement frontend workflow per roadmap priority |
-| TA-05-12 | Qty per item | Reports/Inventory | P2 | MISSING | Repo inspection; `/reports/inventory` | Not implemented | — | Partial | Implement frontend workflow per roadmap priority |
-| TA-05-13 | Current inventory value | Reports/Inventory | P2 | MISSING | Repo inspection; dashboard mock KPI | Not implemented | — | Partial | Implement frontend workflow per roadmap priority |
-| TA-05-14 | Low stock items | Inventory | P1 | PARTIAL | UI inspection; `/low-stock`, dashboard table | Static mock list | — | Yes (for production) | Close documented frontend gaps; do not claim production complete |
+| TA-05-03 | Add stock | Inventory | P1 | PARTIAL | `receiveStock` + adjustments UI + GR; Phase 1 unit + browser | No dedicated “Add stock” nav leaf | Warehouses, Items | Partial (UI now; APIs later) | Optional dedicated receive UI |
+| TA-05-04 | Goods receipt | Inventory | P1 | PARTIAL | GR posts stock with real `referenceId`; snapshot/restore; unit tests 2026-10-27 | No server GR; browser QA incomplete | PO, Warehouses | Partial (UI now; APIs later) | Browser GR end-to-end |
+| TA-05-05 | Stock issue | Inventory | P1 | PARTIAL | `issueStock` + adjustments direction out; activity log; unit tests | No sales-linked issue; no dedicated Issue page | Sales | Partial (UI now; APIs later) | Wire sales when invoices exist |
+| TA-05-06 | Transfer between warehouses | Transfers | P2 | PARTIAL | Atomic `transferStock` + UI; `toWarehouseId`; browser transfer verified 2026-10-27 | No formal transfer report page | Warehouses | Partial (UI now; APIs later) | Keep; enrich reports later |
+| TA-05-07 | Stock adjustment | Adjustments | P2 | PARTIAL | `/stock-adjustments` wired; browser verified | Minimal form; no approval workflow | — | Partial (UI now; APIs later) | Optional multi-line adjust |
+| TA-05-08 | Periodic stocktaking | Stocktaking | P2 | IMPLEMENTED | Unit + UI create kind=periodic | Ledger snapshot; variance apply | localStorage only | Partial (production) | Phase 2 done FE |
+| TA-05-09 | Surprise stocktaking | Stocktaking | P2 | IMPLEMENTED | Unit + UI create kind=surprise | Same engine as periodic | localStorage only | Partial (production) | Phase 2 done FE |
+| TA-05-10 | Item movement history | Movements | P2 | PARTIAL | `/stock-movements` + spare movements; dest column; unit tests | Formal report still placeholder | — | Partial (UI now; APIs later) | Reports phase |
+| TA-05-11 | Current balance per warehouse | Inventory | P1 | PARTIAL | Ledger balances; WH directory aggregate; Items/Spares SoT via `item-on-hand` | No WH detail matrix UI | Items | Partial (UI now; APIs later) | Optional WH stock drill-down |
+| TA-05-12 | Qty per item | Reports/Inventory | P2 | MISSING | Repo inspection; `/reports/inventory` | Not implemented | — | Partial | Reports phase |
+| TA-05-13 | Current inventory value | Reports/Inventory | P2 | MISSING | Repo inspection; dashboard mock KPI | Not implemented | — | Partial | Reports phase |
+| TA-05-14 | Low stock items | Inventory | P1 | PARTIAL | `listLowStockRows` + shared on-hand; dashboard/page live (not static mock) | No period velocity | — | Partial (UI now; APIs later) | Keep helper |
 | TA-05-15 | Slow-moving items | Reports | P1 | MISSING | Repo inspection | Not implemented | — | Partial | Implement frontend workflow per roadmap priority |
 | TA-05-16 | Best-selling items | Reports | P1 | MISSING | Repo inspection | Not implemented | — | Partial | Implement frontend workflow per roadmap priority |
 | TA-05-17 | Fast-moving items | Reports | P1 | MISSING | Repo inspection | Not implemented | — | Partial | Implement frontend workflow per roadmap priority |
@@ -554,9 +554,9 @@ Columns: ID · Requirement · Module · Priority · Status · Evidence · Missin
 | TA-AC-04 | Product search | Products | P0 | MISSING | Repo inspection | Not implemented | — | Partial (UI now; APIs later) | Implement frontend workflow per roadmap priority |
 | TA-AC-05 | Marine engines management | Engines | P0 | PARTIAL | Directory wizard CRUD + KPIs/filters/delete; system A–J 2026-10-27 | No server/authz | — | Partial (UI now; APIs later) | Backend engines API |
 | TA-AC-06 | Link parts to engines | Engines | P0 | PARTIAL | Wizard link step + `syncEngineCompatibleSpares` / `deleteMarineEngineAndUnlink`; integrity tests | No server | Spare Parts | Partial (UI now; APIs later) | Backend link API |
-| TA-AC-07 | Warehouses management | Warehouses | P0 | PARTIAL | Warehouses directory + persist + tests 2026-10-22 | Detail pages / multi-user | — | Partial (UI now; APIs later) | Continue FE polish |
-| TA-AC-08 | Stock in/out/transfer | Inventory | P0 | PARTIAL | Receipts + transfers + movements directories; ledger math unit-tested via GR | Adjustments/stocktaking incomplete | Warehouses | Partial (UI now; APIs later) | Finish adjustments/stocktaking UIs |
-| TA-AC-09 | Stocktaking operations | Stocktaking | P0 | MISSING | Repo inspection | Not implemented | — | Partial | Implement frontend workflow per roadmap priority |
+| TA-AC-07 | Warehouses management | Warehouses | P0 | PARTIAL | Directory + `/warehouses/[id]` details (ledger-scoped) 2026-10-27 | No capacity KPI / multi-user | — | Partial (UI now; APIs later) | Backend persistence |
+| TA-AC-08 | Stock in/out/transfer | Inventory | P0 | PARTIAL | Receipts + transfers + movements + Phase 1 ledger | Stocktaking FE done separately (TA-AC-09) | Warehouses | Partial (UI now; APIs later) | Backend persistence |
+| TA-AC-09 | Stocktaking operations | Stocktaking | P0 | PARTIAL | Unit `stocktaking-store.test.ts` + `/stocktaking` UI Phase 2 | No server authz / multi-user concurrency | Inventory ledger | Partial (UI now; APIs later) | See `INVENTORY_STOCKTAKING_PHASE2.md` |
 | TA-AC-10 | Create purchase orders | Purchasing | P0 | PARTIAL | Create PO with supplier+lines+currency; status transitions; tests 2026-10-22 | Not external submit; legacy mocks coexist | Suppliers, Items | Partial (UI now; APIs later) | Browser QA; retire mock-only list |
 | TA-AC-11 | Suppliers management | Suppliers | P0 | PARTIAL | Supplier frontend provisionally accepted (frontend phase) | Production AP/RBAC | — | Partial (UI now; APIs later) | Do not reopen unless regression |
 | TA-AC-12 | Record shipment data | Import | P0 | MISSING | Repo inspection | Not implemented | — | Partial | Implement frontend workflow per roadmap priority |

@@ -4,8 +4,12 @@ import { beforeEach, describe, it } from "node:test";
 import {
   __resetWarehousesStoreForTests,
   createWarehouse,
+  deleteWarehouse,
   isWarehouseCodeTaken,
   listWarehouses,
+  setWarehouseStatus,
+  suggestNextWarehouseCode,
+  updateWarehouse,
 } from "@/lib/warehouses-store";
 import type { WarehouseFormValues } from "@/types/warehouse";
 
@@ -72,5 +76,39 @@ describe("warehouses-store", () => {
       (err: unknown) => err instanceof Error && err.message === "duplicate-code",
     );
     assert.ok(isWarehouseCodeTaken("WH-DUP"));
+  });
+
+  it("updates warehouse fields and toggles status", () => {
+    const created = createWarehouse(form({ code: "WH-UPD" }));
+    const updated = updateWarehouse(created.id, form({
+      code: "WH-UPD",
+      nameEn: "Updated EN",
+      nameAr: "محدّث",
+      kind: "engines",
+      notes: "Bay A",
+    }));
+    assert.ok(updated);
+    assert.equal(updated!.nameEn, "Updated EN");
+    assert.equal(updated!.kind, "engines");
+    assert.equal(updated!.notes, "Bay A");
+
+    const inactive = setWarehouseStatus(created.id, "inactive");
+    assert.equal(inactive?.status, "inactive");
+    const same = setWarehouseStatus(created.id, "inactive");
+    assert.equal(same?.status, "inactive");
+  });
+
+  it("suggests an unused code and deletes empty warehouses", () => {
+    createWarehouse(form({ code: "WH-001" }));
+    const suggested = suggestNextWarehouseCode();
+    assert.notEqual(suggested, "WH-001");
+    assert.ok(/^WH-\d{3}$/.test(suggested));
+
+    const doomed = createWarehouse(form({ code: "WH-DEL" }));
+    deleteWarehouse(doomed.id);
+    assert.equal(
+      listWarehouses().some((w) => w.id === doomed.id),
+      false,
+    );
   });
 });
