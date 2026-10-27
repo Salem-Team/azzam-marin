@@ -57,7 +57,7 @@ import {
   useSpareParts,
   useSparePartsHydrated,
 } from "@/lib/spare-parts-store";
-import { getCountryLabel } from "@/lib/world-countries";
+import { WorldCountrySelect } from "@/components/ui/world-country-select";
 import { useLocale } from "@/providers/locale-provider";
 import type {
   CatalogItem,
@@ -190,24 +190,6 @@ function SparePartsDirectoryInner() {
         locale === "ar" && item.subCategoryAr
           ? item.subCategoryAr
           : item.subCategoryEn,
-      );
-    }
-    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-  }, [filtersReady, itemsById, locale, spareParts]);
-
-  const origins = useMemo(() => {
-    // Empty until both stores hydrate so SSR HTML matches the first client paint.
-    if (!filtersReady) return [] as [string, string][];
-    const map = new Map<string, string>();
-    for (const part of spareParts) {
-      const item = itemsById.get(part.itemId);
-      const code = item?.countryCode || part.countryCode;
-      if (!code) continue;
-      map.set(
-        code,
-        getCountryLabel(code, locale) ||
-          item?.countryOfOrigin ||
-          part.countryOfOrigin,
       );
     }
     return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
@@ -597,20 +579,15 @@ function SparePartsDirectoryInner() {
                 </select>
               </FilterField>
               <FilterField label={tc(locale, "spare.filter.origin")}>
-                <select
-                  className={selectClass}
+                <WorldCountrySelect
                   value={filters.countryCode}
-                  onChange={(e) =>
-                    patchFilters({ countryCode: e.target.value })
-                  }
-                >
-                  <option value="">{tc(locale, "catalog.filter.all")}</option>
-                  {origins.map(([code, label]) => (
-                    <option key={code} value={code}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
+                  locale={locale}
+                  label={tc(locale, "spare.filter.origin")}
+                  allowEmpty
+                  emptyLabel={tc(locale, "catalog.filter.all")}
+                  searchPlaceholder={tc(locale, "items.form.originSearch")}
+                  onChange={(code) => patchFilters({ countryCode: code })}
+                />
               </FilterField>
               <FilterField label={tc(locale, "spare.filter.uom")}>
                 <select

@@ -28,6 +28,7 @@ import { EnginesTable } from "@/components/marine-engines/engines-table";
 import { ModalDialog } from "@/components/ui/modal-dialog";
 import { PaginationBar } from "@/components/ui/pagination-bar";
 import { ToastProvider, useToast } from "@/components/ui/toast";
+import { WorldCountrySelect } from "@/components/ui/world-country-select";
 import { tc, tcCount } from "@/i18n/catalog";
 import {
   DEFAULT_ENGINE_FILTERS,
@@ -38,7 +39,6 @@ import {
   type EngineSortId,
 } from "@/lib/catalog-query";
 import type { DateRangeValue } from "@/lib/date-range";
-import { getCountryLabel } from "@/lib/world-countries";
 import { useItems } from "@/lib/items-store";
 import {
   appendMarineEngineLinkActivity,
@@ -131,18 +131,6 @@ function EnginesDirectoryInner() {
         .sort((a, b) => a.localeCompare(b)),
     [engines],
   );
-
-  const origins = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const e of engines) {
-      if (!e.countryCode) continue;
-      map.set(
-        e.countryCode,
-        getCountryLabel(e.countryCode, locale) || e.countryOfOrigin,
-      );
-    }
-    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-  }, [engines, locale]);
 
   const extraSearchByEngineId = useMemo(() => {
     const map = new Map<string, string[]>();
@@ -488,25 +476,22 @@ function EnginesDirectoryInner() {
               </select>
             </label>
 
-            <label className="min-w-0">
+            <div className="min-w-0">
               <span className="mb-1 block text-[11px] font-semibold text-[var(--am-text-secondary)]">
                 {tc(locale, "engines.col.origin")}
               </span>
-              <select
+              <WorldCountrySelect
                 value={draftFilters.countryCode}
-                onChange={(e) =>
-                  patchCommittedFilter({ countryCode: e.target.value })
+                locale={locale}
+                label={tc(locale, "engines.col.origin")}
+                allowEmpty
+                emptyLabel={tc(locale, "catalog.filter.all")}
+                searchPlaceholder={tc(locale, "items.form.originSearch")}
+                onChange={(code) =>
+                  patchCommittedFilter({ countryCode: code })
                 }
-                className={selectClass}
-              >
-                <option value="">{tc(locale, "catalog.filter.all")}</option>
-                {origins.map(([code, label]) => (
-                  <option key={code} value={code}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </label>
+              />
+            </div>
 
             <div className="min-w-0">
               <span className="mb-1 block text-[11px] font-semibold text-[var(--am-text-secondary)]">
