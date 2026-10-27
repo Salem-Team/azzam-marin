@@ -635,7 +635,7 @@ function EngineHeroBand({
               ) : null}
             </ul>
 
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2">
               <EngineMetaTile
                 label={tc(locale, "engines.col.manufacturer")}
                 value={engine.manufacturer}
@@ -646,20 +646,6 @@ function EngineHeroBand({
                   <span className="inline-flex items-center gap-1.5">
                     <ItemCountryFlag code={engine.countryCode} />
                     <span className="truncate">{originLabel}</span>
-                  </span>
-                }
-              />
-              <EngineMetaTile
-                label={tc(locale, "engines.col.year")}
-                value={
-                  <span className="tabular-nums">{engine.year}</span>
-                }
-              />
-              <EngineMetaTile
-                label={tc(locale, "engines.col.hp")}
-                value={
-                  <span className="tabular-nums">
-                    {engine.horsepower} {tc(locale, "engines.hpUnit")}
                   </span>
                 }
               />
