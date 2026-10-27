@@ -514,6 +514,12 @@ export type CatalogKey =
   | "engines.tab.sales"
   | "engines.tab.documents"
   | "engines.tab.activity"
+  | "engines.tabShort.overview"
+  | "engines.tabShort.parts"
+  | "engines.tabShort.alternatives"
+  | "engines.tabShort.sales"
+  | "engines.tabShort.documents"
+  | "engines.tabShort.activity"
   | "engines.section.identity"
   | "engines.section.specs"
   | "engines.section.parts"
@@ -1265,6 +1271,12 @@ const en: Record<CatalogKey, string> = {
   "engines.tab.sales": "Sales history",
   "engines.tab.documents": "Documents",
   "engines.tab.activity": "Activity",
+  "engines.tabShort.overview": "Overview",
+  "engines.tabShort.parts": "Parts",
+  "engines.tabShort.alternatives": "Alternatives",
+  "engines.tabShort.sales": "Sales",
+  "engines.tabShort.documents": "Docs",
+  "engines.tabShort.activity": "Activity",
   "engines.section.identity": "Engine identity",
   "engines.section.specs": "Technical specifications",
   "engines.section.parts": "Compatible spare parts",
@@ -2037,6 +2049,12 @@ const ar: Record<CatalogKey, string> = {
   "engines.tab.sales": "سجل المبيعات",
   "engines.tab.documents": "المستندات",
   "engines.tab.activity": "النشاط",
+  "engines.tabShort.overview": "نظرة عامة",
+  "engines.tabShort.parts": "المتوافقة",
+  "engines.tabShort.alternatives": "البدائل",
+  "engines.tabShort.sales": "المبيعات",
+  "engines.tabShort.documents": "المستندات",
+  "engines.tabShort.activity": "النشاط",
   "engines.section.identity": "هوية المحرك",
   "engines.section.specs": "المواصفات الفنية",
   "engines.section.parts": "قطع الغيار المتوافقة",

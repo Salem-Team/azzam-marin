@@ -1,6 +1,13 @@
 "use client";
 
-import { useId, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -85,17 +92,48 @@ type DetailTab =
   | "parts"
   | "activity";
 
-const TABS: { id: DetailTab; labelKey: CatalogKey; icon: LucideIcon }[] = [
-  { id: "overview", labelKey: "engines.tab.overview", icon: LayoutDashboard },
-  { id: "documents", labelKey: "engines.tab.documents", icon: FileText },
-  { id: "sales", labelKey: "engines.tab.sales", icon: ShoppingCart },
+const TABS: {
+  id: DetailTab;
+  labelKey: CatalogKey;
+  shortKey: CatalogKey;
+  icon: LucideIcon;
+}[] = [
+  {
+    id: "overview",
+    labelKey: "engines.tab.overview",
+    shortKey: "engines.tabShort.overview",
+    icon: LayoutDashboard,
+  },
+  {
+    id: "documents",
+    labelKey: "engines.tab.documents",
+    shortKey: "engines.tabShort.documents",
+    icon: FileText,
+  },
+  {
+    id: "sales",
+    labelKey: "engines.tab.sales",
+    shortKey: "engines.tabShort.sales",
+    icon: ShoppingCart,
+  },
   {
     id: "alternatives",
     labelKey: "engines.tab.alternatives",
+    shortKey: "engines.tabShort.alternatives",
     icon: GitCompareArrows,
   },
-  { id: "parts", labelKey: "engines.tab.parts", icon: Link2 },
-  { id: "activity", labelKey: "engines.tab.activity", icon: Activity },
+  {
+    id: "parts",
+    labelKey: "engines.tab.parts",
+    shortKey: "engines.tabShort.parts",
+    icon: Link2,
+  },
+  {
+    id: "activity",
+    labelKey: "engines.tab.activity",
+    shortKey: "engines.tabShort.activity",
+    icon: Activity,
+  },
 ];
 
 function partDisplayName(part: SparePartRecord, locale: Locale): string {
@@ -131,7 +169,19 @@ function EngineDetailsInner({ engineId }: { engineId: string }) {
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
   const actionsRef = useRef<HTMLDivElement>(null);
+  const tablistRef = useRef<HTMLElement>(null);
   const actionsId = useId();
+
+  useEffect(() => {
+    const active = tablistRef.current?.querySelector<HTMLElement>(
+      `[data-engine-tab="${tab}"]`,
+    );
+    active?.scrollIntoView({
+      behavior: "smooth",
+      inline: "nearest",
+      block: "nearest",
+    });
+  }, [tab]);
 
   const parts = useMemo(
     () =>
@@ -350,9 +400,10 @@ function EngineDetailsInner({ engineId }: { engineId: string }) {
         />
 
         <nav
+          ref={tablistRef}
           role="tablist"
           aria-label={tc(locale, "engines.details")}
-          className="flex gap-0.5 overflow-x-auto overscroll-x-contain border-t border-[var(--am-border-default)] px-1.5 py-1.5 sm:px-2 [scrollbar-width:thin]"
+          className="flex gap-1 overflow-x-auto overscroll-x-contain border-t border-[var(--am-border-default)] bg-[var(--am-surface-raised)] px-2 py-1.5 sm:gap-0.5 sm:px-3 [scrollbar-width:thin] [-webkit-overflow-scrolling:touch]"
         >
           {TABS.map((t) => {
             const Icon = t.icon;
@@ -368,23 +419,31 @@ function EngineDetailsInner({ engineId }: { engineId: string }) {
                 key={t.id}
                 type="button"
                 role="tab"
+                data-engine-tab={t.id}
                 aria-selected={active}
+                aria-label={tc(locale, t.labelKey)}
                 className={cn(
-                  "am-focus-ring inline-flex shrink-0 items-center gap-1.5 rounded-[var(--am-radius-md)] px-3 py-2 text-[12.5px] font-semibold am-transition-colors",
+                  "am-focus-ring inline-flex shrink-0 snap-start items-center gap-1.5 rounded-[var(--am-radius-md)] px-2.5 py-2 text-[12px] font-semibold am-transition-colors sm:gap-1.5 sm:px-3 sm:text-[12.5px]",
                   active
                     ? "bg-[var(--am-navy-900)] text-white shadow-[var(--am-shadow-sm)]"
                     : "text-[var(--am-text-secondary)] hover:bg-[var(--am-surface-page)] hover:text-[var(--am-navy-900)]",
                 )}
                 onClick={() => setTab(t.id)}
               >
-                <Icon className="size-3.5 opacity-90" aria-hidden />
-                {tc(locale, t.labelKey)}
+                <Icon
+                  className="size-3.5 shrink-0 opacity-90 max-sm:hidden"
+                  aria-hidden
+                />
+                <span className="sm:hidden">{tc(locale, t.shortKey)}</span>
+                <span className="hidden sm:inline">
+                  {tc(locale, t.labelKey)}
+                </span>
                 {count != null && count > 0 ? (
                   <span
                     className={
                       active
-                        ? "rounded-full bg-white/20 px-1.5 py-px text-[10px] font-bold text-white"
-                        : "rounded-full bg-[var(--am-surface-page)] px-1.5 py-px text-[10px] font-bold text-[var(--am-text-secondary)] ring-1 ring-[var(--am-border-default)]"
+                        ? "rounded-full bg-white/20 px-1.5 py-px text-[10px] font-bold tabular-nums text-white"
+                        : "rounded-full bg-[var(--am-surface-page)] px-1.5 py-px text-[10px] font-bold tabular-nums text-[var(--am-text-secondary)] ring-1 ring-[var(--am-border-default)]"
                     }
                   >
                     {count}
@@ -659,8 +718,8 @@ function EngineHeroBand({
           </div>
         </div>
 
-        {/* Summary */}
-        <aside className="flex min-w-0 flex-col overflow-hidden rounded-[var(--am-radius-lg)] border border-[var(--am-border-default)] bg-[var(--am-surface-raised)] shadow-[var(--am-shadow-sm)]">
+        {/* Summary — desktop/tablet only; mobile uses chips + KPIs above */}
+        <aside className="hidden min-w-0 flex-col overflow-hidden rounded-[var(--am-radius-lg)] border border-[var(--am-border-default)] bg-[var(--am-surface-raised)] shadow-[var(--am-shadow-sm)] lg:flex">
           <header className="flex items-center border-b border-[var(--am-border-default)] px-4 py-2.5">
             <h2 className="text-[12.5px] font-bold text-[var(--am-navy-900)]">
               {tc(locale, "engines.section.summary")}
