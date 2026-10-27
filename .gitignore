@@ -23,6 +23,10 @@
 # misc
 .DS_Store
 *.pem
+.cursor/
+
+# agent / local tooling
+.agent-transcripts/
 
 # debug
 npm-debug.log*
@@ -39,3 +43,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local persistent-dev logs
+.local-dev/
+
+# Live local rebuild stamp
+public/dev-build.json
+.local-dev/

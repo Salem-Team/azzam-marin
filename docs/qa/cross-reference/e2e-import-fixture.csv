@@ -1,0 +1,6 @@
+rowType,originalPartNumber,originalItemCode,alternativePartNumber,alternativeItemCode,relationshipType,degree,notes,partNumber,itemCode,referenceType,referenceValue,referenceManufacturer,referenceNotes
+relationship,E2E-XREF-PN-A,,E2E-XREF-PN-B,,compatible,high,"E2E csv compat",,,,,,,
+reference,,,,,,,E2E-XREF-PN-B,,oem,E2E-CSV-OEM-B,Yanmar,from csv
+relationship,E2E-XREF-PN-A,,E2E-XREF-PN-A,,alternative,exact,self,,,,,,,
+bogus,,,,,,,,,
+reference,,,,,,,MISSING-PN,,oem,X,,,,

@@ -1,0 +1,72 @@
+{
+  "base": "http://127.0.0.1:3456",
+  "passed": 13,
+  "failed": 0,
+  "results": [
+    {
+      "name": "cold /items AR storage, no request cookie",
+      "ok": true,
+      "detail": "console=0"
+    },
+    {
+      "name": "cold /items EN cookie+storage",
+      "ok": true,
+      "detail": "console=0"
+    },
+    {
+      "name": "cold /items AR cookie+storage",
+      "ok": true,
+      "detail": "console=0"
+    },
+    {
+      "name": "cold item details with image",
+      "ok": true,
+      "detail": "console=0"
+    },
+    {
+      "name": "create → details → directory nav",
+      "ok": true,
+      "detail": "console=0"
+    },
+    {
+      "name": "directory ↔ details ×5",
+      "ok": true,
+      "detail": "console=0"
+    },
+    {
+      "name": "item ↔ supplier details nav",
+      "ok": true,
+      "detail": "console=0"
+    },
+    {
+      "name": "refresh after directory load",
+      "ok": true,
+      "detail": "console=0"
+    },
+    {
+      "name": "edit → save → directory",
+      "ok": true,
+      "detail": "console=0"
+    },
+    {
+      "name": "cancel edit → stay on details",
+      "ok": true,
+      "detail": "console=0"
+    },
+    {
+      "name": "deactivate → directory",
+      "ok": true,
+      "detail": "console=0"
+    },
+    {
+      "name": "attachments controls visible (nested check)",
+      "ok": true,
+      "detail": "count=1"
+    },
+    {
+      "name": "attachments image controls + refresh",
+      "ok": true,
+      "detail": "console=0"
+    }
+  ]
+}

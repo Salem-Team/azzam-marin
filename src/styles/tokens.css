@@ -1,0 +1,9 @@
+/**
+ * AZZAM MARINE design tokens — SOURCE OF TRUTH for bundling:
+ *   src/app/globals.css  (:root { --am-* })
+ *
+ * Do not @import this file from the app entry. Edit globals.css,
+ * then mirror meaningful token changes here for docs/agents if needed.
+ *
+ * See docs/design-system/DESIGN_TOKENS.md
+ */

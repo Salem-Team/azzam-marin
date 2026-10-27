@@ -3,15 +3,22 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "open ./scripts/start-local.command",
+    "dev:open": "open ./scripts/start-local.command",
     "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "start": "next start --hostname 127.0.0.1 --port 3456",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test $(find src -name '*.test.ts')",
+    "test:watch": "tsx --test --watch $(find src -name '*.test.ts')",
+    "dev:stop": "lsof -tiTCP:3456 -sTCP:LISTEN | xargs kill -9 2>/dev/null || true; pkill -f \"scripts/live-server.mjs\" 2>/dev/null || true"
   },
   "dependencies": {
+    "lucide-react": "^1.61.0",
     "next": "16.4.2",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "recharts": "^3.10.1"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",
@@ -21,7 +28,9 @@
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.4.2",
+    "playwright": "^1.55.0",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }

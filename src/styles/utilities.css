@@ -1,0 +1,6 @@
+/**
+ * Utility classes (.am-text-*, .am-transition-*, .am-surface-*)
+ * are defined in src/app/globals.css for reliable CSS bundling.
+ *
+ * See docs/design-system/TYPOGRAPHY.md and MOTION_AND_TRANSITIONS.md
+ */

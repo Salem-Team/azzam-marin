@@ -1,0 +1,21 @@
+rowType,originalPartNumber,originalItemCode,alternativePartNumber,alternativeItemCode,relationshipType,degree,notes,partNumber,itemCode,referenceType,referenceValue,referenceManufacturer,referenceNotes
+relationship,"E2E-XREF-PN-A","ITM-E2E-A","E2E-XREF-PN-B","ITM-E2E-B",compatible,high,"E2E csv compat",,,,,,
+reference,,,,,,,,"E2E-XREF-PN-A","ITM-E2E-A",oem,"E2E-OEM-A-001","Yanmar",""
+reference,,,,,,,,"E2E-XREF-PN-A","ITM-E2E-A",part_number,"E2E-XREF-PN-A","Yanmar",""
+reference,,,,,,,,"E2E-XREF-PN-A","ITM-E2E-A",mpn,"E2E-MPN-A-001","Yanmar",""
+reference,,,,,,,,"E2E-XREF-PN-A","ITM-E2E-A",alternative,"E2E-ALT-A-99","Yanmar",""
+reference,,,,,,,,"E2E-XREF-PN-A","ITM-E2E-A",compatible,"E2E-COMPAT-A-99","Yanmar",""
+relationship,"CAT-1R0750","ITM-CAT-FF","6LY2-12345","ITM-6LY2-OF",alternative,exact,"",,,,,,
+reference,,,,,,,,"CAT-1R0750","ITM-CAT-FF",oem,"1R-0750","Caterpillar",""
+reference,,,,,,,,"CAT-1R0750","ITM-CAT-FF",alternative,"FLT-CAT","Caterpillar",""
+relationship,"6LY2-12345","ITM-6LY2-OF","CAT-1R0750","ITM-CAT-FF",alternative,exact,"",,,,,,
+reference,,,,,,,,"6LY2-12345","ITM-6LY2-OF",oem,"129470-35150","Yanmar",""
+reference,,,,,,,,"6LY2-12345","ITM-6LY2-OF",alternative,"YF-6LY2-OF","Yanmar",""
+reference,,,,,,,,"6LY2-12345","ITM-6LY2-OF",alternative,"FLT-6LY","Yanmar",""
+relationship,"18-7789","ITM-SIE-TB","876543-21","ITM-IMP-IP",alternative,exact,"",,,,,,
+reference,,,,,,,,"18-7789","ITM-SIE-TB",oem,"18-3647","Sierra",""
+reference,,,,,,,,"18-7789","ITM-SIE-TB",alternative,"876543-21","Sierra",""
+relationship,"876543-21","ITM-IMP-IP","18-7789","ITM-SIE-TB",alternative,exact,"",,,,,,
+reference,,,,,,,,"876543-21","ITM-IMP-IP",oem,"21951346","Volvo Penta",""
+reference,,,,,,,,"876543-21","ITM-IMP-IP",alternative,"18-7789","Volvo Penta",""
+reference,,,,,,,,"876543-21","ITM-IMP-IP",compatible,"VP-D4-IMP","Volvo Penta",""

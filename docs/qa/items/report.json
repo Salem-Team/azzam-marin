@@ -1,0 +1,162 @@
+[
+  {
+    "locale": "ar",
+    "viewport": "1920x1080",
+    "title": "الأصناف",
+    "overflowX": false,
+    "scrollWidth": 1920,
+    "clientWidth": 1920,
+    "screenshot": "items-ar-1920x1080.png",
+    "pass": true
+  },
+  {
+    "locale": "ar",
+    "viewport": "1440x900",
+    "title": "الأصناف",
+    "overflowX": false,
+    "scrollWidth": 1440,
+    "clientWidth": 1440,
+    "screenshot": "items-ar-1440x900.png",
+    "pass": true
+  },
+  {
+    "locale": "ar",
+    "viewport": "1280x800",
+    "title": "الأصناف",
+    "overflowX": false,
+    "scrollWidth": 1280,
+    "clientWidth": 1280,
+    "screenshot": "items-ar-1280x800.png",
+    "pass": true
+  },
+  {
+    "locale": "ar",
+    "viewport": "1024x768",
+    "title": "الأصناف",
+    "overflowX": false,
+    "scrollWidth": 1024,
+    "clientWidth": 1024,
+    "screenshot": "items-ar-1024x768.png",
+    "pass": true
+  },
+  {
+    "locale": "ar",
+    "viewport": "768x1024",
+    "title": "الأصناف",
+    "overflowX": false,
+    "scrollWidth": 768,
+    "clientWidth": 768,
+    "screenshot": "items-ar-768x1024.png",
+    "pass": true
+  },
+  {
+    "locale": "ar",
+    "viewport": "430x932",
+    "title": "الأصناف",
+    "overflowX": false,
+    "scrollWidth": 430,
+    "clientWidth": 430,
+    "screenshot": "items-ar-430x932.png",
+    "pass": true
+  },
+  {
+    "locale": "ar",
+    "viewport": "390x844",
+    "title": "الأصناف",
+    "overflowX": false,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "screenshot": "items-ar-390x844.png",
+    "pass": true
+  },
+  {
+    "locale": "ar",
+    "viewport": "360x800",
+    "title": "الأصناف",
+    "overflowX": false,
+    "scrollWidth": 360,
+    "clientWidth": 360,
+    "screenshot": "items-ar-360x800.png",
+    "pass": true
+  },
+  {
+    "locale": "en",
+    "viewport": "1920x1080",
+    "title": "Items",
+    "overflowX": false,
+    "scrollWidth": 1920,
+    "clientWidth": 1920,
+    "screenshot": "items-en-1920x1080.png",
+    "pass": true
+  },
+  {
+    "locale": "en",
+    "viewport": "1440x900",
+    "title": "Items",
+    "overflowX": false,
+    "scrollWidth": 1440,
+    "clientWidth": 1440,
+    "screenshot": "items-en-1440x900.png",
+    "pass": true
+  },
+  {
+    "locale": "en",
+    "viewport": "1280x800",
+    "title": "Items",
+    "overflowX": false,
+    "scrollWidth": 1280,
+    "clientWidth": 1280,
+    "screenshot": "items-en-1280x800.png",
+    "pass": true
+  },
+  {
+    "locale": "en",
+    "viewport": "1024x768",
+    "title": "Items",
+    "overflowX": false,
+    "scrollWidth": 1024,
+    "clientWidth": 1024,
+    "screenshot": "items-en-1024x768.png",
+    "pass": true
+  },
+  {
+    "locale": "en",
+    "viewport": "768x1024",
+    "title": "Items",
+    "overflowX": false,
+    "scrollWidth": 768,
+    "clientWidth": 768,
+    "screenshot": "items-en-768x1024.png",
+    "pass": true
+  },
+  {
+    "locale": "en",
+    "viewport": "430x932",
+    "title": "Items",
+    "overflowX": false,
+    "scrollWidth": 430,
+    "clientWidth": 430,
+    "screenshot": "items-en-430x932.png",
+    "pass": true
+  },
+  {
+    "locale": "en",
+    "viewport": "390x844",
+    "title": "Items",
+    "overflowX": false,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "screenshot": "items-en-390x844.png",
+    "pass": true
+  },
+  {
+    "locale": "en",
+    "viewport": "360x800",
+    "title": "Items",
+    "overflowX": false,
+    "scrollWidth": 360,
+    "clientWidth": 360,
+    "screenshot": "items-en-360x800.png",
+    "pass": true
+  }
+]

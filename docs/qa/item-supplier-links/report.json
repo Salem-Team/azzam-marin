@@ -1,0 +1,47 @@
+{
+  "base": "http://127.0.0.1:3456",
+  "passed": 8,
+  "failed": 0,
+  "results": [
+    {
+      "name": "link supplier on item details",
+      "ok": true,
+      "detail": "Alexandria Marine Supplies"
+    },
+    {
+      "name": "supplier href present",
+      "ok": true,
+      "detail": "/suppliers/sup-alexandria"
+    },
+    {
+      "name": "reverse related items shows link",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "item href from supplier",
+      "ok": true,
+      "detail": "/items/ITM-0001"
+    },
+    {
+      "name": "link persists after refresh",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "remove link clears relationship",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "suppliers directory still loads",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "arabic rtl on suppliers tab",
+      "ok": true,
+      "detail": "dir=rtl"
+    }
+  ]
+}

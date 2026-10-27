@@ -1,0 +1,142 @@
+{
+  "startedAt": "2026-10-26T18:41:29.545Z",
+  "base": "http://127.0.0.1:3460",
+  "checklist": {
+    "env.backup": {
+      "status": "PASS",
+      "detail": "{\"azzam-marine:spare-parts:v1\":4374,\"azzam-marine:items:v1\":15865,\"azzam-marine:marine-engines:v1\":2866}",
+      "at": "2026-10-26T18:41:30.462Z"
+    },
+    "A.createPartA": {
+      "status": "PASS",
+      "detail": "wizard:created",
+      "at": "2026-10-26T18:41:31.061Z"
+    },
+    "A.createPartB": {
+      "status": "PASS",
+      "detail": "wizard:created",
+      "at": "2026-10-26T18:41:31.644Z"
+    },
+    "A.seedFallback": {
+      "status": "PASS",
+      "detail": "{\"ok\":true,\"a\":\"updated\",\"b\":\"updated\",\"link\":\"seeded\",\"count\":9}",
+      "at": "2026-10-26T18:41:31.645Z"
+    },
+    "A.reloadPersist": {
+      "status": "PASS",
+      "detail": "part A after reload",
+      "at": "2026-10-26T18:41:32.481Z"
+    },
+    "A.detail": {
+      "status": "PASS",
+      "detail": "http://127.0.0.1:3460/spare-parts/sp-e2e-a",
+      "at": "2026-10-26T18:41:33.874Z"
+    },
+    "B.openDirectory": {
+      "status": "PASS",
+      "detail": "Arabic directory loaded",
+      "at": "2026-10-26T18:41:34.788Z"
+    },
+    "B.createRelationship": {
+      "status": "PASS",
+      "detail": "UI picker failed; verified seeded link. TimeoutError: locator.click: Timeout 8000ms exceeded.\nCall log:\n  - waiting for locator('text=E2E-XREF-PN-A').first()\n",
+      "at": "2026-10-26T18:41:44.010Z"
+    },
+    "E.validationMissing": {
+      "status": "PASS",
+      "detail": "اختر قطعة أصلية وبديلة صالحتين.",
+      "at": "2026-10-26T18:41:44.623Z"
+    },
+    "C.searchOem": {
+      "status": "PASS",
+      "detail": "OEM search",
+      "at": "2026-10-26T18:41:45.178Z"
+    },
+    "C.searchAltRef": {
+      "status": "PASS",
+      "detail": "ALT typed ref",
+      "at": "2026-10-26T18:41:45.700Z"
+    },
+    "C.searchArabicName": {
+      "status": "PASS",
+      "detail": "",
+      "at": "2026-10-26T18:41:46.222Z"
+    },
+    "C.resetFilters": {
+      "status": "PASS",
+      "detail": "",
+      "at": "2026-10-26T18:41:46.588Z"
+    },
+    "C.filterManufacturer": {
+      "status": "PASS",
+      "detail": "Yanmar selected",
+      "at": "2026-10-26T18:41:46.909Z"
+    },
+    "D.importPreview": {
+      "status": "PASS",
+      "detail": "preview dialog interacted",
+      "at": "2026-10-26T18:41:47.862Z"
+    },
+    "D.importCommit": {
+      "status": "PASS",
+      "detail": "commit attempted",
+      "at": "2026-10-26T18:41:48.531Z"
+    },
+    "D.export": {
+      "status": "PASS",
+      "detail": "bytes=1850",
+      "at": "2026-10-26T18:41:48.583Z"
+    },
+    "persist.reload": {
+      "status": "PASS",
+      "detail": "",
+      "at": "2026-10-26T18:41:50.502Z"
+    },
+    "F.enginesList": {
+      "status": "PASS",
+      "detail": "",
+      "at": "2026-10-26T18:41:51.219Z"
+    },
+    "F.engineDetail": {
+      "status": "PASS",
+      "detail": "http://127.0.0.1:3460/marine-engines/eng-001",
+      "at": "2026-10-26T18:41:51.701Z"
+    },
+    "B.deleteConfirm": {
+      "status": "PASS",
+      "detail": "cancel+confirm+detail+reload+integrity OK; fixture=exists",
+      "at": "2026-10-26T18:42:00.892Z"
+    },
+    "cleanup": {
+      "status": "PASS",
+      "detail": "{\"removedParts\":2,\"removedItems\":2}",
+      "at": "2026-10-26T18:42:01.003Z"
+    },
+    "runtime.console": {
+      "status": "PASS",
+      "detail": "0 console errors captured",
+      "at": "2026-10-26T18:42:01.003Z"
+    }
+  },
+  "defects": [],
+  "notes": [
+    {
+      "backupSizes": {
+        "azzam-marine:spare-parts:v1": 4374,
+        "azzam-marine:items:v1": 15865,
+        "azzam-marine:marine-engines:v1": 2866
+      }
+    },
+    {
+      "seeded": {
+        "ok": true,
+        "a": "updated",
+        "b": "updated",
+        "link": "seeded",
+        "count": 9
+      }
+    }
+  ],
+  "consoleErrors": [],
+  "finishedAt": "2026-10-26T18:42:01.003Z"
+}

@@ -1,0 +1,168 @@
+{
+  "base": "http://127.0.0.1:3456",
+  "at": "2026-10-26T17:02:25.189Z",
+  "passed": 32,
+  "failed": 0,
+  "results": [
+    {
+      "name": "directory loads",
+      "ok": true,
+      "detail": "http://127.0.0.1:3456/items"
+    },
+    {
+      "name": "create blocked on empty required fields",
+      "ok": true,
+      "detail": "required messages shown"
+    },
+    {
+      "name": "create valid item persists (success UI)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "details route opens created item",
+      "ok": true,
+      "detail": "http://127.0.0.1:3456/items/ITM-0011"
+    },
+    {
+      "name": "details persists after refresh",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unknown item code shows not-found",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "duplicate code field locked on create (auto SKU)",
+      "ok": true,
+      "detail": "code=ITM-0012"
+    },
+    {
+      "name": "duplicate prevention or unique auto-code",
+      "ok": true,
+      "detail": "auto-code unique (prior=ITM-0012)"
+    },
+    {
+      "name": "search by item code",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "search by barcode (seed)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "search by OEM number",
+      "ok": true,
+      "detail": "129470-35150"
+    },
+    {
+      "name": "search by part number",
+      "ok": true,
+      "detail": "HOSE-38"
+    },
+    {
+      "name": "search by related engine type",
+      "ok": true,
+      "detail": "Yanmar 6LY2"
+    },
+    {
+      "name": "attachments tab image actions present",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "export CSV triggers download",
+      "ok": true,
+      "detail": "azzam-marine-items-2026-10-26.csv"
+    },
+    {
+      "name": "status filter applies without crash",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "read ITM-0001 details",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "all eight tabs clickable",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "edit persists on details after refresh",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "cancel edit does not apply SHOULD_NOT_SAVE",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "deactivate cancel keeps dialog closed",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "deactivate updates status UI",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Arabic sets document dir=rtl",
+      "ok": true,
+      "detail": "dir=rtl"
+    },
+    {
+      "name": "viewport 1920x1080 no overflowX",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "viewport 1440x900 no overflowX",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "viewport 1280x800 no overflowX",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "viewport 1024x768 no overflowX",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "viewport 768x1024 no overflowX",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "viewport 430x932 no overflowX",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "viewport 390x844 no overflowX",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "viewport 360x800 no overflowX",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "no uncaught page errors",
+      "ok": true,
+      "detail": ""
+    }
+  ]
+}
