@@ -39,7 +39,7 @@ PM2_NAME="$4"
 
 cd "$REMOTE_ROOT"
 echo ">>> npm ci"
-npm ci --omit=dev=false
+npm ci
 echo ">>> next build"
 NODE_ENV=production npm run build
 
