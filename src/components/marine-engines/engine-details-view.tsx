@@ -336,21 +336,21 @@ function EngineDetailsInner({ engineId }: { engineId: string }) {
         </div>
       </div>
 
-      <EngineHeroBand
-        engine={engine}
-        item={item}
-        originLabel={originLabel}
-        locale={locale}
-        partsCount={partsCount}
-        onCopySerial={() => void copySerial()}
-        onEdit={openEdit}
-      />
-
       <PageSurface
         fill={false}
-        className="overflow-hidden p-0 shadow-[var(--am-shadow-sm)]"
+        className="min-w-0 overflow-hidden p-0 shadow-[var(--am-shadow-sm)]"
       >
-        <div className="flex items-stretch gap-1 overflow-x-auto overscroll-x-contain px-2 py-1.5 sm:px-3 [scrollbar-width:thin]">
+        <EngineHeroBand
+          engine={engine}
+          item={item}
+          originLabel={originLabel}
+          locale={locale}
+          partsCount={partsCount}
+          onCopySerial={() => void copySerial()}
+          onEdit={openEdit}
+        />
+
+        <div className="flex items-stretch gap-1 overflow-x-auto overscroll-x-contain border-t border-[var(--am-border-default)] px-2 py-1.5 sm:px-3 [scrollbar-width:thin]">
           <div
             role="tablist"
             aria-label={tc(locale, "engines.details")}
@@ -374,7 +374,7 @@ function EngineDetailsInner({ engineId }: { engineId: string }) {
                   className={cn(
                     "am-focus-ring inline-flex shrink-0 items-center gap-1.5 rounded-[var(--am-radius-md)] px-3 py-2 text-[12.5px] font-semibold am-transition-colors",
                     active
-                      ? "bg-[var(--am-blue-700)] text-white shadow-[var(--am-shadow-sm)]"
+                      ? "bg-[var(--am-navy-900)] text-white shadow-[var(--am-shadow-sm)]"
                       : "text-[var(--am-text-secondary)] hover:bg-[var(--am-surface-page)] hover:text-[var(--am-navy-900)]",
                   )}
                   onClick={() => setTab(t.id)}
@@ -408,58 +408,60 @@ function EngineDetailsInner({ engineId }: { engineId: string }) {
             </span>
           </button>
         </div>
-      </PageSurface>
 
-      {tab === "overview" ? (
-        <div className="grid gap-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,19.5rem)] lg:items-start xl:grid-cols-[minmax(0,1.45fr)_minmax(0,20.5rem)]">
-          <div className="grid min-w-0 gap-3">
-            <SpecsCard
-              engine={engine}
-              originLabel={originLabel}
-              locale={locale}
-            />
+        <div role="tabpanel" className="min-w-0 border-t border-[var(--am-border-default)] bg-[color-mix(in_srgb,var(--am-surface-page)_28%,white)] p-3 sm:p-4">
+          {tab === "overview" ? (
+            <div className="grid gap-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,19.5rem)] lg:items-start xl:grid-cols-[minmax(0,1.45fr)_minmax(0,20.5rem)]">
+              <div className="grid min-w-0 gap-3">
+                <SpecsCard
+                  engine={engine}
+                  originLabel={originLabel}
+                  locale={locale}
+                />
+                <CompatiblePartsTable
+                  parts={parts}
+                  locale={locale}
+                  onManage={openEdit}
+                />
+              </div>
+              <div className="grid min-w-0 gap-3 content-start">
+                <DescriptionCard
+                  engine={engine}
+                  locale={locale}
+                  onEdit={openEdit}
+                />
+                <AdditionalCard engine={engine} item={item} locale={locale} />
+                <AlternativesTable rows={alternatives} locale={locale} />
+              </div>
+            </div>
+          ) : null}
+
+          {tab === "documents" ? (
+            <EmptyPanel message={tc(locale, "engines.docsEmpty")} />
+          ) : null}
+
+          {tab === "sales" ? (
+            <EmptyPanel message={tc(locale, "engines.salesEmpty")} />
+          ) : null}
+
+          {tab === "alternatives" ? (
+            <AlternativesTable rows={alternatives} locale={locale} fill />
+          ) : null}
+
+          {tab === "parts" ? (
             <CompatiblePartsTable
               parts={parts}
               locale={locale}
               onManage={openEdit}
+              fill
             />
-          </div>
-          <div className="grid min-w-0 gap-3 content-start">
-            <DescriptionCard
-              engine={engine}
-              locale={locale}
-              onEdit={openEdit}
-            />
-            <AdditionalCard engine={engine} item={item} locale={locale} />
-            <AlternativesTable rows={alternatives} locale={locale} />
-          </div>
+          ) : null}
+
+          {tab === "activity" ? (
+            <ActivityPanel engine={engine} locale={locale} />
+          ) : null}
         </div>
-      ) : null}
-
-      {tab === "documents" ? (
-        <EmptyPanel message={tc(locale, "engines.docsEmpty")} />
-      ) : null}
-
-      {tab === "sales" ? (
-        <EmptyPanel message={tc(locale, "engines.salesEmpty")} />
-      ) : null}
-
-      {tab === "alternatives" ? (
-        <AlternativesTable rows={alternatives} locale={locale} fill />
-      ) : null}
-
-      {tab === "parts" ? (
-        <CompatiblePartsTable
-          parts={parts}
-          locale={locale}
-          onManage={openEdit}
-          fill
-        />
-      ) : null}
-
-      {tab === "activity" ? (
-        <ActivityPanel engine={engine} locale={locale} />
-      ) : null}
+      </PageSurface>
 
       {formOpen ? (
         <EngineFormDialog
@@ -514,31 +516,41 @@ function EngineHeroBand({
   onEdit: () => void;
 }) {
   const src = useItemImageSrc(item?.id ?? "", item?.imageSrc ?? null);
+  const toast = useToast();
+
+  async function copyText(value: string) {
+    try {
+      await navigator.clipboard.writeText(value);
+      toast.push(tc(locale, "spare.copied"));
+    } catch {
+      /* clipboard may be denied */
+    }
+  }
 
   return (
-    <PageSurface
-      fill={false}
-      className="overflow-hidden p-0 shadow-[var(--am-shadow-sm)]"
-    >
-      <div className="grid gap-0 lg:grid-cols-[minmax(0,15.5rem)_minmax(0,1fr)_minmax(0,15.25rem)] xl:grid-cols-[minmax(0,17rem)_minmax(0,1fr)_minmax(0,16rem)]">
+    <header className="bg-[color-mix(in_srgb,var(--am-surface-page)_35%,white)]">
+      <div className="grid gap-4 p-3 sm:p-4 lg:grid-cols-[minmax(0,15rem)_minmax(0,1fr)_minmax(0,16rem)] lg:gap-5 lg:p-5 xl:grid-cols-[minmax(0,16.5rem)_minmax(0,1fr)_minmax(0,17rem)]">
         {/* Gallery */}
-        <div className="flex flex-col border-b border-[var(--am-border-default)] lg:border-b-0 lg:border-e">
-          <div className="flex min-h-[12.5rem] flex-1 items-center justify-center bg-[color-mix(in_srgb,var(--am-surface-page)_55%,white)] p-4 sm:min-h-[14rem]">
+        <div className="mx-auto flex w-full max-w-[16rem] flex-col lg:mx-0">
+          <div className="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-[var(--am-radius-lg)] border border-[var(--am-border-default)] bg-[linear-gradient(160deg,var(--am-blue-100)_0%,white_55%)] shadow-[var(--am-shadow-sm)]">
             {src ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={src}
                 alt=""
-                className="max-h-52 w-full object-contain"
+                className="size-full object-contain p-4"
               />
             ) : (
-              <span className="inline-flex size-16 items-center justify-center rounded-[var(--am-radius-lg)] bg-[var(--am-blue-100)] text-[var(--am-navy-900)] ring-1 ring-[var(--am-border-default)]">
-                <Ship className="size-8 opacity-80" aria-hidden />
+              <span className="flex flex-col items-center gap-2 text-[var(--am-text-muted)]">
+                <Ship className="size-14 opacity-45" aria-hidden />
+                <span className="text-[11px] font-semibold">
+                  {engine.manufacturer}
+                </span>
               </span>
             )}
           </div>
           {src ? (
-            <div className="flex gap-2 border-t border-[var(--am-border-default)] px-3 py-2.5">
+            <div className="mt-2 flex gap-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={src}
@@ -550,8 +562,8 @@ function EngineHeroBand({
         </div>
 
         {/* Identity + KPIs */}
-        <div className="flex min-w-0 flex-col justify-between gap-4 border-b border-[var(--am-border-default)] p-4 sm:p-5 lg:border-b-0 lg:border-e">
-          <div className="min-w-0">
+        <div className="flex min-w-0 flex-col justify-between gap-4">
+          <div className="min-w-0 space-y-3">
             <div className="flex flex-wrap items-center gap-2">
               <StatusBadge
                 label={
@@ -560,27 +572,101 @@ function EngineHeroBand({
                     : tc(locale, "items.status.inactive")
                 }
                 tone={engine.status === "active" ? "approved" : "out"}
+                className="px-2"
               />
-              <span className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-[var(--am-navy-900)]">
+              <span className="inline-flex items-center gap-1.5 rounded-[var(--am-radius-md)] border border-[var(--am-border-default)] bg-[var(--am-surface-raised)] px-2 py-1 text-[12px] font-semibold text-[var(--am-navy-900)]">
                 <ItemCountryFlag code={engine.countryCode} />
                 {originLabel}
               </span>
+              {partsCount > 0 ? (
+                <StatusBadge
+                  label={`${partsCount} ${tc(locale, "engines.detail.kpi.parts")}`}
+                  tone="inventory"
+                  className="px-2"
+                />
+              ) : null}
             </div>
-            <h1 className="mt-2 text-[22px] font-bold tracking-tight text-[var(--am-navy-900)] sm:text-[26px]">
-              {engine.manufacturer}{" "}
-              <span className="font-mono">{engine.model}</span>
-            </h1>
-            <p className="mt-1 text-[12.5px] font-semibold text-[var(--am-text-secondary)]">
-              {engine.manufacturer}
-              <span className="mx-1.5 text-[var(--am-border-strong)]" aria-hidden>
-                ·
-              </span>
-              <span className="font-mono tabular-nums" dir="ltr">
-                {engine.serialNumber}
-              </span>
-            </p>
+
+            <div>
+              <h1 className="am-text-page-title max-w-full break-words !text-[20px] sm:!text-[24px] lg:!text-[26px]">
+                {engine.manufacturer}{" "}
+                <span className="font-mono">{engine.model}</span>
+              </h1>
+              <p className="mt-1 text-[12.5px] font-semibold text-[var(--am-text-secondary)]">
+                {engine.manufacturer}
+                <span
+                  className="mx-1.5 text-[var(--am-border-strong)]"
+                  aria-hidden
+                >
+                  ·
+                </span>
+                <span className="font-mono tabular-nums" dir="ltr">
+                  {engine.year}
+                </span>
+                <span
+                  className="mx-1.5 text-[var(--am-border-strong)]"
+                  aria-hidden
+                >
+                  ·
+                </span>
+                <span className="tabular-nums">
+                  {engine.horsepower} {tc(locale, "engines.hpUnit")}
+                </span>
+              </p>
+            </div>
+
+            <ul className="flex flex-wrap gap-1.5">
+              <EngineIdChip
+                label={tc(locale, "engines.col.serial")}
+                value={engine.serialNumber}
+                onCopy={onCopySerial}
+              />
+              <EngineIdChip
+                label={tc(locale, "engines.col.model")}
+                value={engine.model}
+                onCopy={() => void copyText(engine.model)}
+              />
+              {item?.itemCode ? (
+                <EngineIdChip
+                  label="SKU"
+                  value={item.itemCode}
+                  onCopy={() => void copyText(item.itemCode)}
+                />
+              ) : null}
+            </ul>
+
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <EngineMetaTile
+                label={tc(locale, "engines.col.manufacturer")}
+                value={engine.manufacturer}
+              />
+              <EngineMetaTile
+                label={tc(locale, "engines.col.origin")}
+                value={
+                  <span className="inline-flex items-center gap-1.5">
+                    <ItemCountryFlag code={engine.countryCode} />
+                    <span className="truncate">{originLabel}</span>
+                  </span>
+                }
+              />
+              <EngineMetaTile
+                label={tc(locale, "engines.col.year")}
+                value={
+                  <span className="tabular-nums">{engine.year}</span>
+                }
+              />
+              <EngineMetaTile
+                label={tc(locale, "engines.col.hp")}
+                value={
+                  <span className="tabular-nums">
+                    {engine.horsepower} {tc(locale, "engines.hpUnit")}
+                  </span>
+                }
+              />
+            </div>
+
             {engine.notes.trim() ? (
-              <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-[var(--am-text-secondary)]">
+              <p className="line-clamp-2 text-[13px] leading-relaxed text-[var(--am-text-secondary)]">
                 {engine.notes}
               </p>
             ) : null}
@@ -617,7 +703,7 @@ function EngineHeroBand({
         </div>
 
         {/* Summary */}
-        <div className="flex min-w-0 flex-col">
+        <aside className="flex min-w-0 flex-col overflow-hidden rounded-[var(--am-radius-lg)] border border-[var(--am-border-default)] bg-[var(--am-surface-raised)] shadow-[var(--am-shadow-sm)]">
           <header className="flex items-center justify-between gap-2 border-b border-[var(--am-border-default)] px-4 py-2.5">
             <h2 className="text-[12.5px] font-bold text-[var(--am-navy-900)]">
               {tc(locale, "engines.section.summary")}
@@ -686,9 +772,60 @@ function EngineHeroBand({
               <span dir="ltr">{formatIsoDate(engine.createdAt, locale)}</span>
             </SummaryRow>
           </dl>
-        </div>
+        </aside>
       </div>
-    </PageSurface>
+    </header>
+  );
+}
+
+function EngineIdChip({
+  label,
+  value,
+  onCopy,
+}: {
+  label: string;
+  value: string;
+  onCopy: () => void;
+}) {
+  return (
+    <li className="inline-flex items-center gap-1.5 rounded-[var(--am-radius-md)] border border-[var(--am-border-default)] bg-[var(--am-surface-raised)] pe-1 ps-2 py-1 text-[11px]">
+      <span className="font-semibold text-[var(--am-text-secondary)]">
+        {label}
+      </span>
+      <span
+        className="font-mono font-bold tabular-nums text-[var(--am-navy-900)]"
+        dir="ltr"
+      >
+        {value}
+      </span>
+      <button
+        type="button"
+        className="am-focus-ring inline-flex size-6 items-center justify-center rounded text-[var(--am-text-secondary)] hover:bg-[var(--am-surface-page)] hover:text-[var(--am-navy-900)]"
+        aria-label={label}
+        onClick={onCopy}
+      >
+        <Copy className="size-3" aria-hidden />
+      </button>
+    </li>
+  );
+}
+
+function EngineMetaTile({
+  label,
+  value,
+}: {
+  label: string;
+  value: ReactNode;
+}) {
+  return (
+    <div className="min-w-0 rounded-[var(--am-radius-md)] border border-[var(--am-border-default)] bg-[var(--am-surface-raised)] px-2.5 py-2">
+      <p className="truncate text-[10.5px] font-semibold text-[var(--am-text-secondary)]">
+        {label}
+      </p>
+      <div className="mt-1 truncate text-[12.5px] font-bold text-[var(--am-navy-900)]">
+        {value}
+      </div>
+    </div>
   );
 }
 

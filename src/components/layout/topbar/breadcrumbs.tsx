@@ -9,6 +9,11 @@ import {
   findNavItemByHref,
 } from "@/config/navigation";
 import { tc } from "@/i18n/catalog";
+import {
+  getMarineEngineById,
+  useMarineEngines,
+} from "@/lib/marine-engines-store";
+import { decodeRecordParam } from "@/lib/record-routes";
 import { useLocale } from "@/providers/locale-provider";
 
 /** Detail-record crumb when pathname is nested under a directory leaf. */
@@ -16,7 +21,10 @@ function detailCrumbLabel(
   pathname: string,
   locale: "en" | "ar",
 ): string | null {
-  if (/^\/marine-engines\/[^/]+/.test(pathname)) {
+  const engineMatch = pathname.match(/^\/marine-engines\/([^/]+)/);
+  if (engineMatch) {
+    const engine = getMarineEngineById(decodeRecordParam(engineMatch[1]));
+    if (engine) return `${engine.manufacturer} ${engine.model}`;
     return tc(locale, "engines.details");
   }
   if (/^\/spare-parts\/[^/]+/.test(pathname)) {
@@ -31,6 +39,7 @@ function detailCrumbLabel(
 export function TopbarBreadcrumbs() {
   const pathname = usePathname();
   const { t, dir, locale } = useLocale();
+  useMarineEngines();
   const item = findNavItemByHref(pathname);
   const group = item ? findGroupForItem(item.id) : undefined;
   const Separator = dir === "rtl" ? ChevronLeft : ChevronRight;

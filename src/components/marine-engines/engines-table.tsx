@@ -5,7 +5,11 @@ import { Ship } from "lucide-react";
 import { CatalogActionsMenu } from "@/components/catalog/catalog-actions-menu";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { ItemCountryFlag } from "@/components/items/item-country-flag";
-import { RecordCardLink, RecordTableRow } from "@/components/ui/record-row";
+import {
+  RecordCardLink,
+  RecordTableRow,
+  StretchedRecordLink,
+} from "@/components/ui/record-row";
 import { useItemImageSrc } from "@/hooks/use-item-image-src";
 import { tc } from "@/i18n/catalog";
 import { marineEngineDetailsHref } from "@/lib/record-routes";
@@ -245,13 +249,13 @@ export function EnginesTable({
                     <span className="line-clamp-2">{engine.manufacturer}</span>
                   </td>
                   <td className="px-3 py-2.5">
-                    <button
-                      type="button"
-                      className="am-focus-ring max-w-[9rem] truncate rounded font-mono text-[13px] font-bold text-[var(--am-blue-700)] hover:underline"
-                      onClick={() => onOpen(engine.id)}
+                    <StretchedRecordLink
+                      href={marineEngineDetailsHref(engine.id)}
+                      label={`${tc(locale, "catalog.openRecord")} ${engine.manufacturer} ${engine.model}`}
+                      className="max-w-[9rem] truncate font-mono text-[13px] font-bold text-[var(--am-blue-700)] hover:underline"
                     >
                       {engine.model}
-                    </button>
+                    </StretchedRecordLink>
                   </td>
                   <td className="px-3 py-2.5 tabular-nums">{engine.year}</td>
                   <td className="px-3 py-2.5 font-bold tabular-nums text-[var(--am-navy-900)]">
@@ -273,14 +277,8 @@ export function EnginesTable({
                       </span>
                     </span>
                   </td>
-                  <td className="px-3 py-2.5">
-                    <button
-                      type="button"
-                      className="am-focus-ring rounded font-semibold tabular-nums text-[var(--am-blue-700)] hover:underline"
-                      onClick={() => onOpen(engine.id)}
-                    >
-                      {partsCount}
-                    </button>
+                  <td className="px-3 py-2.5 font-semibold tabular-nums text-[var(--am-navy-900)]">
+                    {partsCount}
                   </td>
                   <td className="px-3 py-2.5">
                     <StatusBadge
@@ -292,7 +290,10 @@ export function EnginesTable({
                       tone={engine.status === "active" ? "approved" : "out"}
                     />
                   </td>
-                  <td className="px-3 py-2.5">
+                  <td
+                    className="relative z-[2] px-3 py-2.5"
+                    data-row-ignore
+                  >
                     <CatalogActionsMenu
                       locale={locale}
                       onView={() => onOpen(engine.id)}
