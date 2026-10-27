@@ -1,6 +1,6 @@
 {
   "name": "azzam-marin",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "dev": "open ./scripts/start-local.command",

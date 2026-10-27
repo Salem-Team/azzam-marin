@@ -62,7 +62,9 @@ export type WhDetailKey =
   | "whd.col.type"
   | "whd.col.uom"
   | "whd.demoPersist"
-  | "whd.inactiveOpsBlocked";
+  | "whd.inactiveOpsBlocked"
+  | "whd.openSpare"
+  | "whd.openEngine";
 
 const en: Record<WhDetailKey, string> = {
   "whd.back": "Warehouses",
@@ -129,6 +131,8 @@ const en: Record<WhDetailKey, string> = {
     "Browser-local warehouse data. Not multi-user. Not a production database.",
   "whd.inactiveOpsBlocked":
     "Stock operations are blocked while this warehouse is inactive.",
+  "whd.openSpare": "Spare part",
+  "whd.openEngine": "Engine",
 };
 
 const ar: Record<WhDetailKey, string> = {
@@ -197,6 +201,8 @@ const ar: Record<WhDetailKey, string> = {
     "بيانات مخزن محلية في المتصفح. ليست متعددة المستخدمين وليست قاعدة إنتاج.",
   "whd.inactiveOpsBlocked":
     "عمليات المخزون موقوفة بينما هذا المخزن غير نشط.",
+  "whd.openSpare": "قطعة غيار",
+  "whd.openEngine": "محرك",
 };
 
 export function twd(locale: Locale, key: WhDetailKey): string {

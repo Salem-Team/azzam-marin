@@ -1325,6 +1325,12 @@ function AlternativesTable({
                       {tc(locale, `spare.compat.degree.${link.degree}`)}
                       {link.notes ? ` · ${link.notes}` : ""}
                     </span>
+                    <span className="text-[11px] font-semibold tabular-nums text-[var(--am-navy-900)]">
+                      {tc(locale, "engines.detail.stock")}:{" "}
+                      {linked != null
+                        ? effectiveSpareOnHandQty(linked)
+                        : "—"}
+                    </span>
                   </Link>
                 </li>
               );
@@ -1345,6 +1351,9 @@ function AlternativesTable({
                   </th>
                   <th className="px-3 py-2.5 text-start">
                     {tc(locale, "spare.compat.degree")}
+                  </th>
+                  <th className="px-3 py-2.5 text-start">
+                    {tc(locale, "engines.detail.stock")}
                   </th>
                   <th className="px-3 py-2.5 text-start">
                     {tc(locale, "spare.compat.notes")}
@@ -1379,6 +1388,11 @@ function AlternativesTable({
                       <td className="px-3 py-2.5">{part.manufacturer}</td>
                       <td className="px-3 py-2.5 text-[12px]">
                         {tc(locale, `spare.compat.degree.${link.degree}`)}
+                      </td>
+                      <td className="px-3 py-2.5 font-semibold tabular-nums">
+                        {linked != null
+                          ? effectiveSpareOnHandQty(linked)
+                          : "—"}
                       </td>
                       <td className="max-w-[10rem] truncate px-3 py-2.5 text-[12px] text-[var(--am-text-secondary)]">
                         {link.notes || "—"}

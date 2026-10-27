@@ -41,6 +41,8 @@ import {
   type CrossRefSortId,
 } from "@/lib/cross-reference-query";
 import type { DateRangeValue } from "@/lib/date-range";
+import { effectiveItemOnHandQty } from "@/lib/item-on-hand";
+import { useWarehouseStock } from "@/lib/inventory-stock-store";
 import { useItems } from "@/lib/items-store";
 import { CROSS_REFERENCE_NUMBER_TYPES } from "@/lib/spare-parts/cross-reference-numbers";
 import { COMPATIBILITY_DEGREES } from "@/lib/spare-parts/spare-part-persist";
@@ -66,6 +68,7 @@ function CrossReferenceDirectoryInner() {
   const toast = useToast();
   const spareParts = useSpareParts();
   const items = useItems();
+  useWarehouseStock();
 
   const itemsById = useMemo(
     () => new Map(items.map((i) => [i.id, i])),
@@ -536,6 +539,12 @@ function CrossReferenceDirectoryInner() {
                       {tc(locale, "xref.col.alternative")}
                     </th>
                     <th className="px-3 py-2.5 text-start">
+                      {tc(locale, "xref.col.stock")}
+                    </th>
+                    <th className="px-3 py-2.5 text-start">
+                      {tc(locale, "xref.col.altStock")}
+                    </th>
+                    <th className="px-3 py-2.5 text-start">
                       {tc(locale, "xref.col.altOem")}
                     </th>
                     <th className="px-3 py-2.5 text-start">
@@ -594,6 +603,16 @@ function CrossReferenceDirectoryInner() {
                           item={row.alternativeItem}
                           locale={locale}
                         />
+                      </td>
+                      <td className="px-3 py-2 font-semibold tabular-nums" dir="ltr">
+                        {row.originalItem
+                          ? effectiveItemOnHandQty(row.originalItem)
+                          : "—"}
+                      </td>
+                      <td className="px-3 py-2 font-semibold tabular-nums" dir="ltr">
+                        {row.alternativeItem
+                          ? effectiveItemOnHandQty(row.alternativeItem)
+                          : "—"}
                       </td>
                       <td className="px-3 py-2">
                         <span

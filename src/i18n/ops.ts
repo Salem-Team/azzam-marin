@@ -39,6 +39,20 @@ export type OpsKey =
   | "warehouses.form.discardConfirm"
   | "warehouses.form.discardTitle"
   | "warehouses.form.discardConfirmAction"
+  | "warehouses.form.keepEditing"
+  | "warehouses.form.unsaved"
+  | "warehouses.form.editStep"
+  | "warehouses.wizard.step1"
+  | "warehouses.wizard.step2"
+  | "warehouses.wizard.step3"
+  | "warehouses.wizard.step4"
+  | "warehouses.wizard.stepLabel"
+  | "warehouses.wizard.next"
+  | "warehouses.wizard.back"
+  | "warehouses.wizard.saving"
+  | "warehouses.wizard.kindHint"
+  | "warehouses.wizard.locationOptional"
+  | "warehouses.wizard.notesOptional"
   | "warehouses.toast.created"
   | "warehouses.toast.updated"
   | "warehouses.toast.activated"
@@ -214,6 +228,23 @@ const en: Record<OpsKey, string> = {
     "Unsaved changes will be lost.",
   "warehouses.form.discardTitle": "Discard changes?",
   "warehouses.form.discardConfirmAction": "Discard",
+  "warehouses.form.keepEditing": "Keep editing",
+  "warehouses.form.unsaved": "You have unsaved changes.",
+  "warehouses.form.editStep": "Edit",
+  "warehouses.wizard.step1": "Identity",
+  "warehouses.wizard.step2": "Location",
+  "warehouses.wizard.step3": "Status & notes",
+  "warehouses.wizard.step4": "Review",
+  "warehouses.wizard.stepLabel": "Step {current} of {total}",
+  "warehouses.wizard.next": "Continue",
+  "warehouses.wizard.back": "Back",
+  "warehouses.wizard.saving": "Saving…",
+  "warehouses.wizard.kindHint":
+    "Choose the warehouse role used across stock movements and filters.",
+  "warehouses.wizard.locationOptional":
+    "Location is optional and can be completed later from warehouse details.",
+  "warehouses.wizard.notesOptional":
+    "Operating status and internal notes for warehouse staff.",
   "warehouses.toast.created": "Warehouse created.",
   "warehouses.toast.updated": "Warehouse updated.",
   "warehouses.toast.activated": "Warehouse activated.",
@@ -400,6 +431,23 @@ const ar: Record<OpsKey, string> = {
     "سيتم فقدان التغييرات غير المحفوظة.",
   "warehouses.form.discardTitle": "تجاهل التغييرات؟",
   "warehouses.form.discardConfirmAction": "تجاهل",
+  "warehouses.form.keepEditing": "متابعة التعديل",
+  "warehouses.form.unsaved": "لديك تغييرات غير محفوظة.",
+  "warehouses.form.editStep": "تعديل",
+  "warehouses.wizard.step1": "الهوية",
+  "warehouses.wizard.step2": "الموقع",
+  "warehouses.wizard.step3": "الحالة والملاحظات",
+  "warehouses.wizard.step4": "المراجعة",
+  "warehouses.wizard.stepLabel": "الخطوة {current} من {total}",
+  "warehouses.wizard.next": "متابعة",
+  "warehouses.wizard.back": "رجوع",
+  "warehouses.wizard.saving": "جاري الحفظ…",
+  "warehouses.wizard.kindHint":
+    "اختر دور المخزن المستخدم في حركات المخزون والفلاتر.",
+  "warehouses.wizard.locationOptional":
+    "الموقع اختياري ويمكن استكماله لاحقًا من تفاصيل المخزن.",
+  "warehouses.wizard.notesOptional":
+    "حالة التشغيل وملاحظات داخلية لفريق المخزن.",
   "warehouses.toast.created": "تم إنشاء المخزن.",
   "warehouses.toast.updated": "تم تحديث المخزن.",
   "warehouses.toast.activated": "تم تفعيل المخزن.",
@@ -547,4 +595,16 @@ const ar: Record<OpsKey, string> = {
 
 export function to(locale: Locale, key: OpsKey): string {
   return (locale === "ar" ? ar : en)[key];
+}
+
+export function toCount(
+  locale: Locale,
+  key: Extract<OpsKey, "warehouses.wizard.stepLabel">,
+  vars: Record<string, string | number>,
+): string {
+  let out = to(locale, key);
+  for (const [name, value] of Object.entries(vars)) {
+    out = out.replaceAll(`{${name}}`, String(value));
+  }
+  return out;
 }

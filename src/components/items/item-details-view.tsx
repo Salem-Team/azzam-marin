@@ -47,9 +47,6 @@ import { ItemStatusDialog } from "@/components/items/item-status-dialog";
 import { PageFrame, PageSurface } from "@/components/layout/page-frame";
 import { DropdownPanel } from "@/components/ui/dropdown-panel";
 import { ToastProvider, useToast } from "@/components/ui/toast";
-import {
-  sparePartsForItem,
-} from "@/config/mock-catalog";
 import { tc, type CatalogKey } from "@/i18n/catalog";
 import {
   activityActorDisplayName,
@@ -66,10 +63,7 @@ import {
   removeLinksForItem,
   useItemSupplierLinks,
 } from "@/lib/item-suppliers-store";
-import {
-  listMarineEngines,
-  useMarineEngines,
-} from "@/lib/marine-engines-store";
+import { useMarineEngines } from "@/lib/marine-engines-store";
 import { useItemImageSrc } from "@/hooks/use-item-image-src";
 import {
   ITEM_IMAGE_ACCEPT_ATTR,
@@ -79,6 +73,11 @@ import {
   validateItemImageFile,
 } from "@/lib/items/item-images";
 import { useWarehouseStock } from "@/lib/inventory-stock-store";
+import {
+  balancesForCatalogItem,
+  engineLinkedToItem,
+  primarySpareForItem,
+} from "@/lib/inventory-cross-module";
 import { resolveItemOnHand } from "@/lib/item-on-hand";
 import {
   deleteItem,
@@ -92,7 +91,10 @@ import {
 import {
   marineEngineDetailsHref,
   sparePartDetailsHref,
+  warehouseDetailsHref,
 } from "@/lib/record-routes";
+import { useSpareParts } from "@/lib/spare-parts-store";
+import { useWarehouses } from "@/lib/warehouses-store";
 import { useLocale } from "@/providers/locale-provider";
 import type {
   CatalogItem,
@@ -100,6 +102,7 @@ import type {
   ItemStatusId,
 } from "@/types/catalog";
 import type { Locale } from "@/types/i18n";
+import type { WarehouseStockBalance } from "@/types/warehouse";
 
 type DetailTab =
   | "overview"
@@ -145,7 +148,8 @@ function ItemDetailsInner({ itemCode }: { itemCode: string }) {
   const items = useItems();
   const hydrated = useItemsHydrated();
   const itemLinks = useItemSupplierLinks();
-  useMarineEngines();
+  const marineEngines = useMarineEngines();
+  const spareParts = useSpareParts();
   useWarehouseStock();
   const item = items.find(
     (i) => i.itemCode.trim().toUpperCase() === itemCode.trim().toUpperCase(),
@@ -233,8 +237,8 @@ function ItemDetailsInner({ itemCode }: { itemCode: string }) {
 
   const nameAr = item.nameAr;
   const nameEn = item.nameEn;
-  const relatedSpare = sparePartsForItem(item.id)[0];
-  const relatedEngine = listMarineEngines().find((e) => e.itemId === item.id);
+  const relatedSpare = primarySpareForItem(item.id, spareParts);
+  const relatedEngine = engineLinkedToItem(item.id, marineEngines);
   const statusAction: ItemStatusId =
     item.status === "active" ? "inactive" : "active";
 
@@ -1366,6 +1370,15 @@ function InventoryPanel({
   locale: Locale;
 }) {
   const onHand = resolveItemOnHand(item);
+  const warehouses = useWarehouses();
+  const balances = useWarehouseStock();
+  const itemBalances = balancesForCatalogItem(balances, item.id);
+  const warehouseName = (id: string) => {
+    const wh = warehouses.find((w) => w.id === id);
+    if (!wh) return id;
+    return locale === "ar" ? wh.nameAr : wh.nameEn;
+  };
+
   return (
     <PageSurface fill={false} className="overflow-hidden !shadow-none">
       <div className="grid grid-cols-2 gap-3 p-4 lg:grid-cols-4">
@@ -1394,9 +1407,6 @@ function InventoryPanel({
           large
         />
       </div>
-      <p className="border-t border-[var(--am-border-default)] px-4 py-3 text-[12.5px] text-[var(--am-text-secondary)]">
-        {tc(locale, "items.inventory.liveUnavailable")}
-      </p>
       <p className="border-t border-[var(--am-border-default)] px-4 py-2 text-[11.5px] text-[var(--am-text-secondary)]">
         {tc(
           locale,
@@ -1405,9 +1415,65 @@ function InventoryPanel({
             : "items.inventory.demoNote",
         )}
       </p>
+      <div className="border-t border-[var(--am-border-default)]">
+        <h3 className="px-4 pt-3 text-[12.5px] font-semibold text-[var(--am-navy-900)]">
+          {tc(locale, "items.inventory.warehouseBalances")}
+        </h3>
+        {itemBalances.length === 0 ? (
+          <p className="px-4 py-3 text-[12.5px] text-[var(--am-text-secondary)]">
+            {tc(locale, "items.inventory.noBalances")}
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-start text-[12.5px]">
+              <thead className="bg-[var(--am-surface-page)] text-[11px] font-semibold text-[var(--am-text-secondary)]">
+                <tr>
+                  <th className="px-4 py-2">
+                    {tc(locale, "items.inventory.warehouse")}
+                  </th>
+                  <th className="px-4 py-2">
+                    {tc(locale, "items.inventory.balanceQty")}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--am-border-default)]">
+                {itemBalances.map((row: WarehouseStockBalance) => (
+                  <tr key={`${row.warehouseId}-${row.itemId}`}>
+                    <td className="px-4 py-2 font-medium">
+                      <Link
+                        href={warehouseDetailsHref(row.warehouseId, {
+                          tab: "items",
+                        })}
+                        className="am-focus-ring text-[var(--am-blue-700)] hover:underline"
+                      >
+                        {warehouseName(row.warehouseId)}
+                      </Link>
+                    </td>
+                    <td
+                      className={cn(
+                        "px-4 py-2 font-bold tabular-nums",
+                        row.qty <= 0 && "text-[var(--am-danger-600)]",
+                      )}
+                      dir="ltr"
+                    >
+                      {row.qty}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
       <div className="border-t border-[var(--am-border-default)] px-4 py-3">
         <Link
-          href="/warehouses"
+          href={
+            itemBalances[0]
+              ? warehouseDetailsHref(itemBalances[0].warehouseId, {
+                  tab: "items",
+                })
+              : "/warehouses"
+          }
           className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-[var(--am-blue-700)] hover:underline"
         >
           <Boxes className="size-3.5" aria-hidden />

@@ -1,18 +1,28 @@
 "use client";
 
-import { useEffect, useId, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
-  Building2,
+  BadgeCheck,
+  Boxes,
+  Cog,
+  Hash,
   MapPin,
+  NotebookPen,
+  PackageOpen,
+  PackagePlus,
+  Power,
   StickyNote,
   Warehouse,
+  type LucideIcon,
 } from "lucide-react";
 
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { ModalDialog } from "@/components/ui/modal-dialog";
-import { to, type OpsKey } from "@/i18n/ops";
+import { WizardStepper } from "@/components/ui/wizard-stepper";
+import { to, toCount, type OpsKey } from "@/i18n/ops";
 import { cn } from "@/lib/cn";
-import { formatDateTime, formatIsoDate } from "@/lib/format";
+import { formatDateTime } from "@/lib/format";
+import { logClientActivity } from "@/lib/log-client-activity";
 import {
   createWarehouse,
   isWarehouseCodeTaken,
@@ -27,8 +37,8 @@ import {
   sanitizeWarehouseForm,
   validateWarehouseForm,
   type WarehouseFieldErrors,
+  type WarehouseFormScope,
 } from "@/lib/warehouses/warehouse-validation";
-import { logClientActivity } from "@/lib/log-client-activity";
 import { useLocale } from "@/providers/locale-provider";
 import type {
   WarehouseFormValues,
@@ -44,6 +54,37 @@ const KINDS: readonly WarehouseKind[] = [
   "other",
 ];
 
+const KIND_ICONS: Record<WarehouseKind, LucideIcon> = {
+  main: Warehouse,
+  new_parts: PackagePlus,
+  used_parts: PackageOpen,
+  engines: Cog,
+  other: Boxes,
+};
+
+const STEPS = [1, 2, 3, 4] as const;
+type Step = (typeof STEPS)[number];
+
+const STEP_SCOPES: Record<Step, WarehouseFormScope | "review"> = {
+  1: "identity",
+  2: "location",
+  3: "statusNotes",
+  4: "review",
+};
+
+const STEP_ICONS: Record<Step, LucideIcon> = {
+  1: Warehouse,
+  2: MapPin,
+  3: Power,
+  4: BadgeCheck,
+};
+
+const fieldClass =
+  "am-focus-ring mt-1 w-full rounded-[var(--am-radius-md)] border border-[var(--am-border-default)] bg-[var(--am-surface-raised)] px-3 py-2 text-[13px] text-[var(--am-navy-900)] outline-none placeholder:text-[var(--am-text-muted)]";
+
+const labelClass =
+  "text-[12px] font-semibold text-[var(--am-text-secondary)]";
+
 export interface WarehouseStockSnapshot {
   totalQty: number;
   distinctItems: number;
@@ -55,58 +96,6 @@ interface WarehouseFormDialogProps {
   stock?: WarehouseStockSnapshot | null;
   onClose: () => void;
   onSaved: (record: WarehouseRecord, mode: "create" | "update") => void;
-}
-
-function FieldLabel({
-  htmlFor,
-  children,
-  required,
-}: {
-  htmlFor: string;
-  children: ReactNode;
-  required?: boolean;
-}) {
-  return (
-    <label
-      htmlFor={htmlFor}
-      className="mb-1 flex items-center gap-1 text-[11.5px] font-semibold text-[var(--am-text-secondary)]"
-    >
-      <span>{children}</span>
-      {required ? (
-        <span className="text-[var(--am-danger-600)]" aria-hidden>
-          *
-        </span>
-      ) : null}
-    </label>
-  );
-}
-
-function FieldError({ id, message }: { id: string; message?: string }) {
-  if (!message) return null;
-  return (
-    <p id={id} className="mt-1 text-[11.5px] font-medium text-[var(--am-danger-600)]" role="alert">
-      {message}
-    </p>
-  );
-}
-
-function SectionTitle({
-  icon: Icon,
-  title,
-}: {
-  icon: typeof Warehouse;
-  title: string;
-}) {
-  return (
-    <div className="mb-2.5 flex items-center gap-2 border-b border-[var(--am-border-default)] pb-2">
-      <span className="inline-flex size-6 items-center justify-center rounded-md bg-[#EAF2FF] text-[#075DE8]">
-        <Icon className="size-3.5" aria-hidden />
-      </span>
-      <h3 className="text-[12.5px] font-semibold text-[var(--am-text-primary)]">
-        {title}
-      </h3>
-    </div>
-  );
 }
 
 function initialForm(editing: WarehouseRecord | null): {
@@ -142,80 +131,115 @@ export function WarehouseFormDialog(props: WarehouseFormDialogProps) {
 }
 
 function WarehouseFormDialogSession({
-  open,
   editing,
   stock,
   onClose,
   onSaved,
 }: WarehouseFormDialogProps) {
   const { locale } = useLocale();
-  const baseId = useId();
+  const isEdit = Boolean(editing);
   const initial = initialForm(editing);
+
+  const [step, setStep] = useState<Step>(1);
   const [values, setValues] = useState<WarehouseFormValues>(initial.values);
   const [errors, setErrors] = useState<WarehouseFieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
-  const [discardOpen, setDiscardOpen] = useState(false);
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [suggestedCode] = useState(initial.suggestedCode);
   const [baseline] = useState(initial.baseline);
 
-  const isEdit = Boolean(editing);
-
   const dirty =
-    open &&
     Boolean(baseline) &&
     JSON.stringify(sanitizeWarehouseForm(values)) !== baseline;
 
-  const inputClass =
-    "am-focus-ring w-full rounded-[var(--am-radius-md)] border border-[var(--am-border-default)] bg-[var(--am-surface-raised)] px-3 py-2 text-[13px] text-[var(--am-text-primary)] placeholder:text-[var(--am-text-secondary)]";
+  const stepLabels: Record<Step, string> = {
+    1: to(locale, "warehouses.wizard.step1"),
+    2: to(locale, "warehouses.wizard.step2"),
+    3: to(locale, "warehouses.wizard.step3"),
+    4: to(locale, "warehouses.wizard.step4"),
+  };
 
-  function patch(partial: Partial<WarehouseFormValues>) {
-    setValues((prev) => ({ ...prev, ...partial }));
-  }
-
-  function clearFieldError(key: keyof WarehouseFieldErrors) {
+  function setField<K extends keyof WarehouseFormValues>(
+    key: K,
+    value: WarehouseFormValues[K],
+  ) {
+    setValues((prev) => ({ ...prev, [key]: value }));
     setErrors((prev) => {
-      if (!prev[key]) return prev;
+      if (!prev[key as keyof WarehouseFieldErrors]) return prev;
       const next = { ...prev };
-      delete next[key];
+      delete next[key as keyof WarehouseFieldErrors];
       return next;
     });
   }
 
-  function runValidate(nextValues: WarehouseFormValues = values): WarehouseFieldErrors {
-    return validateWarehouseForm(nextValues, locale, {
+  function validateStep(current: Step): boolean {
+    const scope = STEP_SCOPES[current];
+    if (scope === "review") return true;
+    const nextErrors = validateWarehouseForm(values, locale, {
       allowBlankCode: true,
       exceptId: editing?.id,
       isCodeTaken: (code) => isWarehouseCodeTaken(code, editing?.id),
+      scope,
     });
+    setErrors(nextErrors);
+    return !hasWarehouseFieldErrors(nextErrors);
   }
 
-  function handleCloseRequest(): boolean {
+  function goNext() {
+    if (!validateStep(step)) return;
+    setStep((s) => Math.min(4, s + 1) as Step);
+  }
+
+  function goBack() {
+    setErrors({});
+    setStep((s) => Math.max(1, s - 1) as Step);
+  }
+
+  function goToStep(target: Step) {
+    if (target >= step) return;
+    setErrors({});
+    setStep(target);
+  }
+
+  function requestClose(): boolean {
     if (submitting) return false;
-    if (!dirty) return true;
-    setDiscardOpen(true);
+    if (!dirty) {
+      onClose();
+      return true;
+    }
+    setConfirmDiscard(true);
     return false;
-  }
-
-  function handleClose() {
-    if (handleCloseRequest() === false) return;
-    onClose();
-  }
-
-  function confirmDiscard() {
-    setDiscardOpen(false);
-    onClose();
   }
 
   function save() {
     if (submitting) return;
     const sanitized = sanitizeWarehouseForm(values);
-    const nextErrors = runValidate(sanitized);
+    const nextErrors = validateWarehouseForm(sanitized, locale, {
+      allowBlankCode: true,
+      exceptId: editing?.id,
+      isCodeTaken: (code) => isWarehouseCodeTaken(code, editing?.id),
+      scope: "all",
+    });
     setErrors(nextErrors);
     if (hasWarehouseFieldErrors(nextErrors)) {
+      if (
+        nextErrors.code ||
+        nextErrors.nameEn ||
+        nextErrors.nameAr ||
+        nextErrors.kind
+      ) {
+        setStep(1);
+      } else if (nextErrors.addressEn || nextErrors.addressAr) {
+        setStep(2);
+      } else {
+        setStep(3);
+      }
       return;
     }
 
     setSubmitting(true);
+    setSubmitError(null);
     try {
       if (editing) {
         const updated = updateWarehouse(editing.id, sanitized);
@@ -249,47 +273,30 @@ function WarehouseFormDialogSession({
       }
       onClose();
     } catch (err) {
-      const code =
-        err instanceof Error ? err.message : "save-error";
+      const code = err instanceof Error ? err.message : "save-error";
       if (code === "duplicate-code") {
         setErrors({ code: to(locale, "ops.duplicateCode") });
+        setStep(1);
       } else if (code === "required") {
         setErrors({
           form: to(locale, "ops.required"),
-          nameEn: !sanitized.nameEn
-            ? to(locale, "ops.required")
-            : undefined,
-          nameAr: !sanitized.nameAr
-            ? to(locale, "ops.required")
-            : undefined,
+          nameEn: !sanitized.nameEn ? to(locale, "ops.required") : undefined,
+          nameAr: !sanitized.nameAr ? to(locale, "ops.required") : undefined,
         });
+        setStep(1);
       } else {
-        setErrors({ form: to(locale, "ops.saveError") });
+        setSubmitError(to(locale, "ops.saveError"));
       }
     } finally {
       setSubmitting(false);
     }
   }
 
-  useEffect(() => {
-    if (!open) return;
-    function onKey(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-        e.preventDefault();
-        save();
-      }
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-    // intentionally bind latest save via closure on each open/values change
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, values, submitting, editing, locale]);
-
   return (
     <ModalDialog
-      open={open}
-      onClose={handleClose}
-      onRequestClose={handleCloseRequest}
+      open
+      onClose={() => requestClose()}
+      onRequestClose={requestClose}
       size="lg"
       title={
         isEdit
@@ -297,43 +304,100 @@ function WarehouseFormDialogSession({
           : to(locale, "warehouses.form.createTitle")
       }
       footer={
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-[11px] text-[var(--am-text-secondary)]">
-            {to(locale, "warehouses.form.shortcutSave")}
-          </p>
-          <div className="flex gap-2">
+        confirmDiscard ? (
+          <>
+            <p className="me-auto text-[12.5px] text-[var(--am-text-secondary)]">
+              {to(locale, "warehouses.form.unsaved")}
+            </p>
             <button
               type="button"
-              className="am-focus-ring h-9 rounded-[var(--am-radius-md)] border border-[var(--am-border-default)] bg-[var(--am-surface-raised)] px-3.5 text-[12.5px] font-semibold disabled:opacity-60"
-              onClick={handleClose}
+              className="am-focus-ring h-9 rounded-[var(--am-radius-md)] border border-[var(--am-border-default)] bg-[var(--am-surface-raised)] px-3.5 text-[12.5px] font-semibold text-[var(--am-navy-900)]"
+              onClick={() => setConfirmDiscard(false)}
+            >
+              {to(locale, "warehouses.form.keepEditing")}
+            </button>
+            <button
+              type="button"
+              className="am-focus-ring h-9 rounded-[var(--am-radius-md)] bg-[var(--am-danger-600)] px-3.5 text-[12.5px] font-semibold text-white"
+              onClick={() => {
+                setConfirmDiscard(false);
+                onClose();
+              }}
+            >
+              {to(locale, "warehouses.form.discardConfirmAction")}
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              className="am-focus-ring h-9 rounded-[var(--am-radius-md)] border border-[var(--am-border-default)] bg-[var(--am-surface-raised)] px-3.5 text-[12.5px] font-semibold text-[var(--am-navy-900)]"
+              onClick={() => requestClose()}
               disabled={submitting}
             >
               {to(locale, "ops.cancel")}
             </button>
-            <button
-              type="button"
-              className="am-focus-ring h-9 rounded-[var(--am-radius-md)] bg-[var(--am-blue-700)] px-3.5 text-[12.5px] font-semibold text-white hover:brightness-110 disabled:opacity-60"
-              onClick={save}
-              disabled={submitting}
-            >
-              {submitting
-                ? to(locale, "ops.loading")
-                : isEdit
-                  ? to(locale, "warehouses.form.saveChanges")
-                  : to(locale, "warehouses.form.create")}
-            </button>
-          </div>
-        </div>
+            {step > 1 ? (
+              <button
+                type="button"
+                className="am-focus-ring h-9 rounded-[var(--am-radius-md)] border border-[var(--am-border-default)] bg-[var(--am-surface-raised)] px-3.5 text-[12.5px] font-semibold text-[var(--am-navy-900)]"
+                onClick={goBack}
+                disabled={submitting}
+              >
+                {to(locale, "warehouses.wizard.back")}
+              </button>
+            ) : null}
+            {step < 4 ? (
+              <button
+                type="button"
+                className="am-focus-ring h-9 rounded-[var(--am-radius-md)] bg-[var(--am-blue-700)] px-3.5 text-[12.5px] font-semibold text-white hover:bg-[var(--am-blue-600)]"
+                onClick={goNext}
+              >
+                {to(locale, "warehouses.wizard.next")}
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="am-focus-ring h-9 rounded-[var(--am-radius-md)] bg-[var(--am-blue-700)] px-3.5 text-[12.5px] font-semibold text-white hover:bg-[var(--am-blue-600)] disabled:opacity-60"
+                onClick={save}
+                disabled={submitting}
+              >
+                {submitting
+                  ? to(locale, "warehouses.wizard.saving")
+                  : isEdit
+                    ? to(locale, "warehouses.form.saveChanges")
+                    : to(locale, "warehouses.form.create")}
+              </button>
+            )}
+          </>
+        )
       }
     >
-      <div className="grid gap-5">
-        {errors.form ? (
-          <p className="rounded-[var(--am-radius-md)] border border-[color-mix(in_srgb,var(--am-danger-600)_35%,var(--am-border-default))] bg-[color-mix(in_srgb,#C62832_6%,var(--am-surface-raised))] px-3 py-2 text-[12.5px] font-medium text-[var(--am-danger-600)]" role="alert">
-            {errors.form}
+      <div className="space-y-4">
+        <WizardStepper
+          progressLabel={toCount(locale, "warehouses.wizard.stepLabel", {
+            current: step,
+            total: 4,
+          })}
+          current={step}
+          onStepSelect={(id) => goToStep(id as Step)}
+          steps={STEPS.map((s) => ({
+            id: s,
+            label: stepLabels[s],
+            icon: STEP_ICONS[s],
+          }))}
+        />
+
+        {submitError || errors.form ? (
+          <p
+            className="rounded-[var(--am-radius-md)] border border-[color-mix(in_srgb,var(--am-danger-600)_35%,var(--am-border-default))] bg-[color-mix(in_srgb,var(--am-danger-600)_8%,white)] px-3 py-2 text-[12.5px] text-[var(--am-danger-600)]"
+            role="alert"
+          >
+            {submitError ?? errors.form}
           </p>
         ) : null}
 
-        {isEdit && editing ? (
+        {isEdit && editing && step === 1 ? (
           <div className="flex flex-wrap items-center gap-2 rounded-[var(--am-radius-md)] border border-[var(--am-border-default)] bg-[var(--am-surface-page)] px-3 py-2.5">
             <StatusBadge
               label={to(
@@ -344,295 +408,514 @@ function WarehouseFormDialogSession({
               )}
               tone={editing.status === "active" ? "approved" : "inventory"}
             />
-            <span className="font-mono text-[11.5px] text-[var(--am-text-secondary)]" dir="ltr">
+            <span
+              className="font-mono text-[11.5px] text-[var(--am-text-secondary)]"
+              dir="ltr"
+            >
               {editing.code}
             </span>
             {stock ? (
-              <span className="text-[11.5px] text-[var(--am-text-secondary)]" dir="ltr">
+              <span
+                className="text-[11.5px] text-[var(--am-text-secondary)]"
+                dir="ltr"
+              >
                 {to(locale, "warehouses.qtyUnits")}: {stock.totalQty} ·{" "}
                 {to(locale, "warehouses.itemUnits")}: {stock.distinctItems}
               </span>
             ) : null}
-            <span className="ms-auto text-[11px] text-[var(--am-text-secondary)]" dir="ltr">
-              {formatIsoDate(editing.updatedAt, locale)}
-            </span>
           </div>
         ) : null}
 
-        {/* Identity */}
-        <section>
-          <SectionTitle
-            icon={Warehouse}
-            title={to(locale, "warehouses.form.sectionIdentity")}
-          />
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div>
-              <FieldLabel htmlFor={`${baseId}-code`}>
-                {to(locale, "warehouses.code")}
-              </FieldLabel>
-              <input
-                id={`${baseId}-code`}
-                className={cn(
-                  inputClass,
-                  "font-mono",
-                  errors.code && "border-[var(--am-danger-600)]",
-                )}
-                dir="ltr"
-                autoComplete="off"
-                spellCheck={false}
-                value={values.code}
-                aria-invalid={Boolean(errors.code)}
-                aria-describedby={
-                  errors.code
-                    ? `${baseId}-code-err`
-                    : `${baseId}-code-hint`
-                }
-                placeholder={suggestedCode}
-                onChange={(e) => {
-                  clearFieldError("code");
-                  patch({ code: normalizeWarehouseCode(e.target.value) });
-                }}
-              />
-              <FieldError id={`${baseId}-code-err`} message={errors.code} />
-              {!errors.code ? (
-                <p
-                  id={`${baseId}-code-hint`}
-                  className="mt-1 text-[11px] text-[var(--am-text-secondary)]"
+        <div key={step} className="am-wizard-panel space-y-4">
+          {step === 1 ? (
+            <section className="space-y-3">
+              <p className="text-[12.5px] text-[var(--am-text-secondary)]">
+                {to(locale, "warehouses.wizard.kindHint")}
+              </p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Field
+                  label={`${to(locale, "warehouses.code")}`}
+                  error={errors.code}
                 >
-                  {to(locale, "warehouses.form.codeHint")}
+                  <input
+                    className={cn(
+                      fieldClass,
+                      "font-mono",
+                      errors.code && "border-[var(--am-danger-600)]",
+                    )}
+                    dir="ltr"
+                    autoComplete="off"
+                    spellCheck={false}
+                    value={values.code}
+                    placeholder={suggestedCode}
+                    aria-invalid={Boolean(errors.code)}
+                    onChange={(e) =>
+                      setField("code", normalizeWarehouseCode(e.target.value))
+                    }
+                  />
+                  {!errors.code ? (
+                    <span className="mt-1 block text-[11px] text-[var(--am-text-muted)]">
+                      {to(locale, "warehouses.form.codeHint")}
+                    </span>
+                  ) : null}
+                </Field>
+
+                <Field
+                  label={`${to(locale, "warehouses.kind")} *`}
+                  error={errors.kind}
+                >
+                  <div
+                    className="mt-1 grid grid-cols-1 gap-2 sm:grid-cols-2"
+                    role="radiogroup"
+                    aria-label={to(locale, "warehouses.kind")}
+                  >
+                    {KINDS.map((k) => {
+                      const Icon = KIND_ICONS[k];
+                      const selected = values.kind === k;
+                      return (
+                        <button
+                          key={k}
+                          type="button"
+                          role="radio"
+                          aria-checked={selected}
+                          className={cn(
+                            "am-focus-ring flex items-center gap-2 rounded-[var(--am-radius-md)] border px-2.5 py-2 text-start text-[12.5px] font-semibold am-transition-colors",
+                            selected
+                              ? "border-[var(--am-blue-700)] bg-[var(--am-blue-100)] text-[var(--am-navy-900)]"
+                              : "border-[var(--am-border-default)] bg-[var(--am-surface-raised)] text-[var(--am-text-secondary)] hover:bg-[var(--am-surface-page)]",
+                            errors.kind && !selected && "border-[var(--am-danger-600)]",
+                          )}
+                          onClick={() => setField("kind", k)}
+                        >
+                          <span
+                            className={cn(
+                              "inline-flex size-7 shrink-0 items-center justify-center rounded-[var(--am-radius-md)]",
+                              selected
+                                ? "bg-[var(--am-blue-700)] text-white"
+                                : "bg-[var(--am-surface-page)] text-[var(--am-blue-700)]",
+                            )}
+                          >
+                            <Icon className="size-3.5 stroke-[1.75]" aria-hidden />
+                          </span>
+                          <span className="min-w-0 leading-snug">
+                            {to(locale, `warehouses.kind.${k}` as OpsKey)}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </Field>
+
+                <Field
+                  label={`${to(locale, "warehouses.nameEn")} *`}
+                  error={errors.nameEn}
+                >
+                  <input
+                    className={cn(
+                      fieldClass,
+                      errors.nameEn && "border-[var(--am-danger-600)]",
+                    )}
+                    dir="ltr"
+                    value={values.nameEn}
+                    aria-invalid={Boolean(errors.nameEn)}
+                    aria-required
+                    onChange={(e) => setField("nameEn", e.target.value)}
+                  />
+                </Field>
+
+                <Field
+                  label={`${to(locale, "warehouses.nameAr")} *`}
+                  error={errors.nameAr}
+                >
+                  <input
+                    className={cn(
+                      fieldClass,
+                      errors.nameAr && "border-[var(--am-danger-600)]",
+                    )}
+                    dir="rtl"
+                    value={values.nameAr}
+                    aria-invalid={Boolean(errors.nameAr)}
+                    aria-required
+                    onChange={(e) => setField("nameAr", e.target.value)}
+                  />
+                </Field>
+              </div>
+            </section>
+          ) : null}
+
+          {step === 2 ? (
+            <section className="space-y-3">
+              <p className="text-[12.5px] text-[var(--am-text-secondary)]">
+                {to(locale, "warehouses.wizard.locationOptional")}
+              </p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Field
+                  label={to(locale, "warehouses.addressEn")}
+                  error={errors.addressEn}
+                >
+                  <input
+                    className={cn(
+                      fieldClass,
+                      errors.addressEn && "border-[var(--am-danger-600)]",
+                    )}
+                    dir="ltr"
+                    value={values.addressEn}
+                    aria-invalid={Boolean(errors.addressEn)}
+                    onChange={(e) => setField("addressEn", e.target.value)}
+                  />
+                </Field>
+                <Field
+                  label={to(locale, "warehouses.addressAr")}
+                  error={errors.addressAr}
+                >
+                  <input
+                    className={cn(
+                      fieldClass,
+                      errors.addressAr && "border-[var(--am-danger-600)]",
+                    )}
+                    dir="rtl"
+                    value={values.addressAr}
+                    aria-invalid={Boolean(errors.addressAr)}
+                    onChange={(e) => setField("addressAr", e.target.value)}
+                  />
+                </Field>
+              </div>
+            </section>
+          ) : null}
+
+          {step === 3 ? (
+            <section className="space-y-4">
+              <p className="text-[12.5px] text-[var(--am-text-secondary)]">
+                {to(locale, "warehouses.wizard.notesOptional")}
+              </p>
+              <div>
+                <span className={labelClass}>
+                  {to(locale, "warehouses.form.sectionStatus")}
+                </span>
+                <div
+                  className="mt-1.5 inline-flex rounded-[var(--am-radius-md)] border border-[var(--am-border-default)] bg-[var(--am-surface-page)] p-0.5"
+                  role="group"
+                  aria-label={to(locale, "warehouses.form.sectionStatus")}
+                >
+                  {(
+                    [
+                      ["active", "ops.status.active"],
+                      ["inactive", "ops.status.inactive"],
+                    ] as const
+                  ).map(([status, key]) => {
+                    const selected = values.status === status;
+                    return (
+                      <button
+                        key={status}
+                        type="button"
+                        className={cn(
+                          "am-focus-ring inline-flex h-9 items-center gap-1.5 rounded-[calc(var(--am-radius-md)-2px)] px-3 text-[12px] font-semibold am-transition-colors",
+                          selected
+                            ? status === "active"
+                              ? "bg-[#E8F7EF] text-[#16865A]"
+                              : "bg-[#EEF2F7] text-[#12345A]"
+                            : "text-[var(--am-text-secondary)] hover:bg-[var(--am-surface-raised)]",
+                        )}
+                        aria-pressed={selected}
+                        onClick={() => setField("status", status)}
+                      >
+                        <Power className="size-3.5" aria-hidden />
+                        {to(locale, key)}
+                      </button>
+                    );
+                  })}
+                </div>
+                {errors.status ? (
+                  <span
+                    className="mt-1 block text-[11.5px] text-[var(--am-danger-600)]"
+                    role="alert"
+                  >
+                    {errors.status}
+                  </span>
+                ) : null}
+              </div>
+
+              <Field
+                label={to(locale, "warehouses.notes")}
+                error={errors.notes}
+              >
+                <textarea
+                  className={cn(
+                    fieldClass,
+                    "min-h-[5.5rem] resize-y",
+                    errors.notes && "border-[var(--am-danger-600)]",
+                  )}
+                  value={values.notes}
+                  maxLength={500}
+                  aria-invalid={Boolean(errors.notes)}
+                  placeholder={to(locale, "warehouses.form.notesPlaceholder")}
+                  onChange={(e) => setField("notes", e.target.value)}
+                />
+                <span
+                  className="mt-1 block text-end text-[10.5px] tabular-nums text-[var(--am-text-secondary)]"
+                  dir="ltr"
+                >
+                  {values.notes.length}/500
+                </span>
+              </Field>
+            </section>
+          ) : null}
+
+          {step === 4 ? (
+            <section className="space-y-3">
+              <div className="grid gap-3">
+                <ReviewSection
+                  title={to(locale, "warehouses.wizard.step1")}
+                  icon={Warehouse}
+                  tone="navy"
+                  onEdit={() => goToStep(1)}
+                  editLabel={to(locale, "warehouses.form.editStep")}
+                >
+                  <ReviewItem
+                    icon={Hash}
+                    tone="muted"
+                    label={to(locale, "warehouses.code")}
+                    value={values.code.trim() || suggestedCode || "—"}
+                    ltr
+                    mono
+                  />
+                  <ReviewItem
+                    icon={KIND_ICONS[values.kind]}
+                    tone="blue"
+                    label={to(locale, "warehouses.kind")}
+                    value={to(
+                      locale,
+                      `warehouses.kind.${values.kind}` as OpsKey,
+                    )}
+                  />
+                  <ReviewItem
+                    icon={Warehouse}
+                    tone="navy"
+                    label={to(locale, "warehouses.nameEn")}
+                    value={values.nameEn || "—"}
+                    ltr
+                  />
+                  <ReviewItem
+                    icon={Warehouse}
+                    tone="navy"
+                    label={to(locale, "warehouses.nameAr")}
+                    value={values.nameAr || "—"}
+                  />
+                </ReviewSection>
+
+                <ReviewSection
+                  title={to(locale, "warehouses.wizard.step2")}
+                  icon={MapPin}
+                  tone="teal"
+                  onEdit={() => goToStep(2)}
+                  editLabel={to(locale, "warehouses.form.editStep")}
+                >
+                  <ReviewItem
+                    icon={MapPin}
+                    tone="teal"
+                    label={to(locale, "warehouses.addressEn")}
+                    value={values.addressEn.trim() || "—"}
+                    ltr
+                  />
+                  <ReviewItem
+                    icon={MapPin}
+                    tone="teal"
+                    label={to(locale, "warehouses.addressAr")}
+                    value={values.addressAr.trim() || "—"}
+                  />
+                </ReviewSection>
+
+                <ReviewSection
+                  title={to(locale, "warehouses.wizard.step3")}
+                  icon={NotebookPen}
+                  tone="orange"
+                  onEdit={() => goToStep(3)}
+                  editLabel={to(locale, "warehouses.form.editStep")}
+                >
+                  <ReviewItem
+                    icon={Power}
+                    tone={values.status === "active" ? "green" : "muted"}
+                    label={to(locale, "warehouses.form.sectionStatus")}
+                    value={to(
+                      locale,
+                      values.status === "active"
+                        ? "ops.status.active"
+                        : "ops.status.inactive",
+                    )}
+                  />
+                  <ReviewItem
+                    icon={StickyNote}
+                    tone="orange"
+                    label={to(locale, "warehouses.notes")}
+                    value={values.notes.trim() || "—"}
+                  />
+                </ReviewSection>
+              </div>
+
+              {isEdit && editing ? (
+                <p className="text-[11px] text-[var(--am-text-secondary)]">
+                  <span dir="ltr">
+                    {formatDateTime(editing.createdAt, locale)}
+                  </span>
+                  {" · "}
+                  <span dir="ltr">
+                    {formatDateTime(editing.updatedAt, locale)}
+                  </span>
                 </p>
               ) : null}
-            </div>
-
-            <div>
-              <FieldLabel htmlFor={`${baseId}-kind`} required>
-                {to(locale, "warehouses.kind")}
-              </FieldLabel>
-              <select
-                id={`${baseId}-kind`}
-                className={cn(inputClass, errors.kind && "border-[var(--am-danger-600)]")}
-                value={values.kind}
-                aria-invalid={Boolean(errors.kind)}
-                onChange={(e) => {
-                  clearFieldError("kind");
-                  patch({ kind: e.target.value as WarehouseKind });
-                }}
-              >
-                {KINDS.map((k) => (
-                  <option key={k} value={k}>
-                    {to(locale, `warehouses.kind.${k}` as OpsKey)}
-                  </option>
-                ))}
-              </select>
-              <FieldError id={`${baseId}-kind-err`} message={errors.kind} />
-            </div>
-
-            <div>
-              <FieldLabel htmlFor={`${baseId}-nameEn`} required>
-                {to(locale, "warehouses.nameEn")}
-              </FieldLabel>
-              <input
-                id={`${baseId}-nameEn`}
-                className={cn(
-                  inputClass,
-                  errors.nameEn && "border-[var(--am-danger-600)]",
-                )}
-                dir="ltr"
-                value={values.nameEn}
-                aria-invalid={Boolean(errors.nameEn)}
-                aria-describedby={errors.nameEn ? `${baseId}-nameEn-err` : undefined}
-                onChange={(e) => {
-                  clearFieldError("nameEn");
-                  patch({ nameEn: e.target.value });
-                }}
-              />
-              <FieldError id={`${baseId}-nameEn-err`} message={errors.nameEn} />
-            </div>
-
-            <div>
-              <FieldLabel htmlFor={`${baseId}-nameAr`} required>
-                {to(locale, "warehouses.nameAr")}
-              </FieldLabel>
-              <input
-                id={`${baseId}-nameAr`}
-                className={cn(
-                  inputClass,
-                  errors.nameAr && "border-[var(--am-danger-600)]",
-                )}
-                dir="rtl"
-                value={values.nameAr}
-                aria-invalid={Boolean(errors.nameAr)}
-                aria-describedby={errors.nameAr ? `${baseId}-nameAr-err` : undefined}
-                onChange={(e) => {
-                  clearFieldError("nameAr");
-                  patch({ nameAr: e.target.value });
-                }}
-              />
-              <FieldError id={`${baseId}-nameAr-err`} message={errors.nameAr} />
-            </div>
-          </div>
-        </section>
-
-        {/* Status */}
-        <section>
-          <SectionTitle
-            icon={Building2}
-            title={to(locale, "warehouses.form.sectionStatus")}
-          />
-          <div
-            className="inline-flex rounded-[var(--am-radius-md)] border border-[var(--am-border-default)] bg-[var(--am-surface-page)] p-0.5"
-            role="group"
-            aria-label={to(locale, "warehouses.form.sectionStatus")}
-          >
-            {(
-              [
-                ["active", "ops.status.active"],
-                ["inactive", "ops.status.inactive"],
-              ] as const
-            ).map(([status, key]) => {
-              const selected = values.status === status;
-              return (
-                <button
-                  key={status}
-                  type="button"
-                  className={cn(
-                    "am-focus-ring h-8 rounded-[calc(var(--am-radius-md)-2px)] px-3 text-[12px] font-semibold am-transition-colors",
-                    selected
-                      ? status === "active"
-                        ? "bg-[#E8F7EF] text-[#16865A]"
-                        : "bg-[#EEF2F7] text-[#12345A]"
-                      : "text-[var(--am-text-secondary)] hover:bg-[var(--am-surface-raised)]",
-                  )}
-                  aria-pressed={selected}
-                  onClick={() => {
-                    clearFieldError("status");
-                    patch({ status });
-                  }}
-                >
-                  {to(locale, key)}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* Location */}
-        <section>
-          <SectionTitle
-            icon={MapPin}
-            title={to(locale, "warehouses.form.sectionLocation")}
-          />
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div>
-              <FieldLabel htmlFor={`${baseId}-addrEn`}>
-                {to(locale, "warehouses.addressEn")}
-              </FieldLabel>
-              <input
-                id={`${baseId}-addrEn`}
-                className={cn(
-                  inputClass,
-                  errors.addressEn && "border-[var(--am-danger-600)]",
-                )}
-                dir="ltr"
-                value={values.addressEn}
-                aria-invalid={Boolean(errors.addressEn)}
-                onChange={(e) => {
-                  clearFieldError("addressEn");
-                  patch({ addressEn: e.target.value });
-                }}
-              />
-              <FieldError id={`${baseId}-addrEn-err`} message={errors.addressEn} />
-            </div>
-            <div>
-              <FieldLabel htmlFor={`${baseId}-addrAr`}>
-                {to(locale, "warehouses.addressAr")}
-              </FieldLabel>
-              <input
-                id={`${baseId}-addrAr`}
-                className={cn(
-                  inputClass,
-                  errors.addressAr && "border-[var(--am-danger-600)]",
-                )}
-                dir="rtl"
-                value={values.addressAr}
-                aria-invalid={Boolean(errors.addressAr)}
-                onChange={(e) => {
-                  clearFieldError("addressAr");
-                  patch({ addressAr: e.target.value });
-                }}
-              />
-              <FieldError id={`${baseId}-addrAr-err`} message={errors.addressAr} />
-            </div>
-          </div>
-        </section>
-
-        {/* Notes */}
-        <section>
-          <SectionTitle
-            icon={StickyNote}
-            title={to(locale, "warehouses.notes")}
-          />
-          <textarea
-            id={`${baseId}-notes`}
-            className={cn(
-              inputClass,
-              "min-h-[5.5rem] resize-y",
-              errors.notes && "border-[var(--am-danger-600)]",
-            )}
-            value={values.notes}
-            maxLength={500}
-            aria-invalid={Boolean(errors.notes)}
-            placeholder={to(locale, "warehouses.form.notesPlaceholder")}
-            onChange={(e) => {
-              clearFieldError("notes");
-              patch({ notes: e.target.value });
-            }}
-          />
-          <div className="mt-1 flex items-center justify-between gap-2">
-            <FieldError id={`${baseId}-notes-err`} message={errors.notes} />
-            <span className="ms-auto text-[10.5px] tabular-nums text-[var(--am-text-secondary)]" dir="ltr">
-              {values.notes.length}/500
-            </span>
-          </div>
-        </section>
-
-        {isEdit && editing ? (
-          <p className="text-[11px] text-[var(--am-text-secondary)]">
-            <span dir="ltr">{formatDateTime(editing.createdAt, locale)}</span>
-            {" · "}
-            <span dir="ltr">{formatDateTime(editing.updatedAt, locale)}</span>
-          </p>
-        ) : null}
+            </section>
+          ) : null}
+        </div>
       </div>
-
-      <ModalDialog
-        open={discardOpen}
-        onClose={() => setDiscardOpen(false)}
-        size="md"
-        title={to(locale, "warehouses.form.discardTitle")}
-        footer={
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              className="am-focus-ring h-9 rounded-[var(--am-radius-md)] border border-[var(--am-border-default)] bg-[var(--am-surface-raised)] px-3.5 text-[12.5px] font-semibold"
-              onClick={() => setDiscardOpen(false)}
-            >
-              {to(locale, "ops.cancel")}
-            </button>
-            <button
-              type="button"
-              className="am-focus-ring h-9 rounded-[var(--am-radius-md)] bg-[var(--am-blue-700)] px-3.5 text-[12.5px] font-semibold text-white"
-              onClick={confirmDiscard}
-            >
-              {to(locale, "warehouses.form.discardConfirmAction")}
-            </button>
-          </div>
-        }
-      >
-        <p className="text-[13px] leading-relaxed text-[var(--am-text-secondary)]">
-          {to(locale, "warehouses.form.discardConfirm")}
-        </p>
-      </ModalDialog>
     </ModalDialog>
+  );
+}
+
+function Field({
+  label,
+  error,
+  children,
+}: {
+  label: string;
+  error?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="block min-w-0">
+      <span className={labelClass}>{label}</span>
+      {children}
+      {error ? (
+        <span
+          className="mt-1 block text-[11.5px] text-[var(--am-danger-600)]"
+          role="alert"
+        >
+          {error}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+const REVIEW_TONES = {
+  navy: {
+    icon: "bg-[color-mix(in_srgb,var(--am-navy-900)_10%,white)] text-[var(--am-navy-900)]",
+    bar: "bg-[var(--am-navy-900)]",
+  },
+  blue: {
+    icon: "bg-[var(--am-blue-100)] text-[var(--am-blue-700)]",
+    bar: "bg-[var(--am-blue-700)]",
+  },
+  teal: {
+    icon: "bg-[color-mix(in_srgb,var(--am-success-600)_12%,white)] text-[var(--am-success-600)]",
+    bar: "bg-[var(--am-success-600)]",
+  },
+  green: {
+    icon: "bg-[color-mix(in_srgb,var(--am-success-600)_12%,white)] text-[var(--am-success-600)]",
+    bar: "bg-[var(--am-success-600)]",
+  },
+  orange: {
+    icon: "bg-[color-mix(in_srgb,var(--am-warning-600)_14%,white)] text-[var(--am-warning-600)]",
+    bar: "bg-[var(--am-warning-600)]",
+  },
+  muted: {
+    icon: "bg-[color-mix(in_srgb,var(--am-text-secondary)_12%,white)] text-[var(--am-text-secondary)]",
+    bar: "bg-[var(--am-text-secondary)]",
+  },
+} as const;
+
+type ReviewTone = keyof typeof REVIEW_TONES;
+
+function ReviewSection({
+  title,
+  icon: Icon,
+  tone,
+  onEdit,
+  editLabel,
+  children,
+}: {
+  title: string;
+  icon: LucideIcon;
+  tone: ReviewTone;
+  onEdit: () => void;
+  editLabel: string;
+  children: ReactNode;
+}) {
+  const t = REVIEW_TONES[tone];
+  return (
+    <section className="overflow-hidden rounded-[var(--am-radius-lg)] border border-[var(--am-border-default)] bg-[var(--am-surface-raised)] shadow-[var(--am-shadow-sm)]">
+      <header className="flex items-center justify-between gap-2 border-b border-[var(--am-border-default)] bg-[color-mix(in_srgb,var(--am-surface-page)_70%,white)] px-3 py-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <span
+            className={cn(
+              "inline-flex size-7 shrink-0 items-center justify-center rounded-[var(--am-radius-md)]",
+              t.icon,
+            )}
+          >
+            <Icon className="size-3.5 stroke-[1.75]" aria-hidden />
+          </span>
+          <h4 className="truncate text-[12.5px] font-semibold text-[var(--am-navy-900)]">
+            {title}
+          </h4>
+        </div>
+        <button
+          type="button"
+          className="am-focus-ring shrink-0 text-[11.5px] font-semibold text-[var(--am-blue-700)] hover:underline"
+          onClick={onEdit}
+        >
+          {editLabel}
+        </button>
+      </header>
+      <dl className="grid grid-cols-1 gap-px bg-[var(--am-border-default)] sm:grid-cols-2 [&>:last-child:nth-child(odd)]:sm:col-span-2">
+        {children}
+      </dl>
+    </section>
+  );
+}
+
+function ReviewItem({
+  label,
+  value,
+  icon: Icon,
+  tone,
+  ltr,
+  mono,
+}: {
+  label: string;
+  value: ReactNode;
+  icon: LucideIcon;
+  tone: ReviewTone;
+  ltr?: boolean;
+  mono?: boolean;
+}) {
+  const t = REVIEW_TONES[tone];
+  return (
+    <div className="relative flex min-w-0 gap-2.5 bg-[var(--am-surface-raised)] px-3 py-2.5">
+      <span
+        className={cn("absolute inset-y-0 start-0 w-[3px]", t.bar)}
+        aria-hidden
+      />
+      <span
+        className={cn(
+          "ms-1 inline-flex size-7 shrink-0 items-center justify-center rounded-[var(--am-radius-md)]",
+          t.icon,
+        )}
+      >
+        <Icon className="size-3.5 stroke-[1.75]" aria-hidden />
+      </span>
+      <div className="min-w-0 flex-1">
+        <dt className="text-[10.5px] font-semibold uppercase tracking-wide text-[var(--am-text-muted)]">
+          {label}
+        </dt>
+        <dd
+          className={cn(
+            "mt-0.5 text-[13px] font-semibold leading-snug text-[var(--am-navy-900)] [overflow-wrap:anywhere]",
+            mono && "font-mono tabular-nums",
+          )}
+          dir={ltr ? "ltr" : undefined}
+        >
+          {value}
+        </dd>
+      </div>
+    </div>
   );
 }

@@ -51,8 +51,11 @@ import {
   type StockMovement,
 } from "@/lib/inventory-stock-store";
 import { logClientActivity } from "@/lib/log-client-activity";
+import { resolveCatalogModuleLinks } from "@/lib/inventory-cross-module";
 import { itemDetailsHref, warehouseDetailsHref } from "@/lib/record-routes";
 import { useItems, useItemsHydrated } from "@/lib/items-store";
+import { useMarineEngines } from "@/lib/marine-engines-store";
+import { useSpareParts } from "@/lib/spare-parts-store";
 import {
   setWarehouseStatus,
   useWarehouses,
@@ -121,6 +124,8 @@ function WarehouseDetailsInner({ warehouseId }: { warehouseId: string }) {
   const balances = useWarehouseStock();
   const movements = useStockMovements();
   const items = useItems();
+  const spareParts = useSpareParts();
+  const marineEngines = useMarineEngines();
   const hydrated = whHydrated && itemsHydrated;
 
   const warehouse = warehouses.find((w) => w.id === warehouseId);
@@ -769,6 +774,12 @@ function WarehouseDetailsInner({ warehouseId }: { warehouseId: string }) {
                       {pagedRows.map((row, idx) => {
                         const item = itemsById.get(row.itemId);
                         const href = itemDetailsHref(row.itemCode);
+                        const moduleLinks = item
+                          ? resolveCatalogModuleLinks(item, {
+                              spareParts,
+                              engines: marineEngines,
+                            })
+                          : null;
                         return (
                           <RecordTableRow key={row.key}>
                             <td className="relative z-[1] px-3 py-2.5 tabular-nums text-[var(--am-text-secondary)]" dir="ltr">
@@ -792,8 +803,33 @@ function WarehouseDetailsInner({ warehouseId }: { warehouseId: string }) {
                                     />
                                   ) : null}
                                 </span>
-                                <span className="min-w-0 truncate">
-                                  {locale === "ar" ? row.nameAr : row.nameEn}
+                                <span className="min-w-0">
+                                  <span className="block truncate">
+                                    {locale === "ar" ? row.nameAr : row.nameEn}
+                                  </span>
+                                  {moduleLinks?.spareHref ||
+                                  moduleLinks?.engineHref ? (
+                                    <span className="mt-0.5 flex flex-wrap gap-x-2 gap-y-0.5 text-[11px]">
+                                      {moduleLinks.spareHref ? (
+                                        <Link
+                                          href={moduleLinks.spareHref}
+                                          className="am-focus-ring font-semibold text-[var(--am-blue-700)] hover:underline"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          {twd(locale, "whd.openSpare")}
+                                        </Link>
+                                      ) : null}
+                                      {moduleLinks.engineHref ? (
+                                        <Link
+                                          href={moduleLinks.engineHref}
+                                          className="am-focus-ring font-semibold text-[var(--am-blue-700)] hover:underline"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          {twd(locale, "whd.openEngine")}
+                                        </Link>
+                                      ) : null}
+                                    </span>
+                                  ) : null}
                                 </span>
                               </div>
                             </td>

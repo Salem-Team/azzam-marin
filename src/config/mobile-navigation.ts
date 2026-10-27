@@ -52,7 +52,7 @@ export const MOBILE_BOTTOM_TABS: readonly MobileTab[] = [
   {
     id: "inventory",
     kind: "route",
-    href: findNavItemById("items")?.href ?? "/items",
+    href: "/warehouses",
     icon: PackageSearch,
     labelKey: "shell.mobile.tab.inventory",
     matchIds: [

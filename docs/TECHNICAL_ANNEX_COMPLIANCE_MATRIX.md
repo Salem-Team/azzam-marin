@@ -283,7 +283,7 @@ Columns: ID · Requirement · Module · Priority · Status · Evidence · Missin
 
 | ID | Requirement | Module | Pri | Status | Evidence | Missing | Deps | Backend? | Next action |
 |----|-------------|--------|-----|--------|----------|---------|------|----------|-------------|
-| TA-03-00 | Integrated parts/products module | Products | P1 | PARTIAL | `/items` CRUD+details; item↔supplier links via `item-suppliers-store`; `/spare-parts` + `/marine-engines` separate; ITEMS_MODULE_IMPLEMENTATION.md §5a | No server API; spare/engine workflows incomplete; links ≠ purchasing | Suppliers | Partial (UI now; APIs later) | Backend item master; keep module separation |
+| TA-03-00 | Integrated parts/products module | Products | P1 | PARTIAL | Shared spine + live spare/engine/supplier links; warehouse stock via ledger; see `INVENTORY_CROSS_MODULE_INTEGRATION.md` 2026-10-27 | No server API; links ≠ purchasing | Suppliers, Inventory | Partial (UI now; APIs later) | Backend item master; keep module separation |
 | TA-03-01-01 | Item code | Products | P1 | PARTIAL | Items list/detail/wizard; persisted in `localStorage`; duplicate prevention tested | Browser-local only | — | Partial (UI now; APIs later) | Persist via item master API |
 | TA-03-01-02 | Arabic name | Products | P1 | PARTIAL | Items list/detail/wizard; i18n; local persist | Browser-local only | — | Partial (UI now; APIs later) | Persist via item master API |
 | TA-03-01-03 | English name | Products | P1 | PARTIAL | Items list/detail/wizard; local persist | Browser-local only | — | Partial (UI now; APIs later) | Persist via item master API |
@@ -331,7 +331,7 @@ Columns: ID · Requirement · Module · Priority · Status · Evidence · Missin
 | TA-05-08 | Periodic stocktaking | Stocktaking | P2 | IMPLEMENTED | Unit + UI create kind=periodic | Ledger snapshot; variance apply | localStorage only | Partial (production) | Phase 2 done FE |
 | TA-05-09 | Surprise stocktaking | Stocktaking | P2 | IMPLEMENTED | Unit + UI create kind=surprise | Same engine as periodic | localStorage only | Partial (production) | Phase 2 done FE |
 | TA-05-10 | Item movement history | Movements | P2 | PARTIAL | `/stock-movements` + spare movements; dest column; unit tests | Formal report still placeholder | — | Partial (UI now; APIs later) | Reports phase |
-| TA-05-11 | Current balance per warehouse | Inventory | P1 | PARTIAL | Ledger balances; WH directory aggregate; Items/Spares SoT via `item-on-hand` | No WH detail matrix UI | Items | Partial (UI now; APIs later) | Optional WH stock drill-down |
+| TA-05-11 | Current balance per warehouse | Inventory | P1 | PARTIAL | Ledger balances; WH matrix; cross-module helpers; **acceptance A–G 16/16** (`INVENTORY_CROSS_MODULE_ACCEPTANCE_REPORT.md`) 2026-10-27 | Browser-local only | Items, Spares, Engines, Xref, Suppliers | Partial (UI now; APIs later) | Server persistence |
 | TA-05-12 | Qty per item | Reports/Inventory | P2 | MISSING | Repo inspection; `/reports/inventory` | Not implemented | — | Partial | Reports phase |
 | TA-05-13 | Current inventory value | Reports/Inventory | P2 | MISSING | Repo inspection; dashboard mock KPI | Not implemented | — | Partial | Reports phase |
 | TA-05-14 | Low stock items | Inventory | P1 | PARTIAL | `listLowStockRows` + shared on-hand; dashboard/page live (not static mock) | No period velocity | — | Partial (UI now; APIs later) | Keep helper |

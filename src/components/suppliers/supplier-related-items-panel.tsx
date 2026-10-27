@@ -9,12 +9,19 @@ import { PageSurface } from "@/components/layout/page-frame";
 import { tc, tcCount, type CatalogKey } from "@/i18n/catalog";
 import { ts } from "@/i18n/suppliers";
 import { formatMoney } from "@/lib/format";
+import { effectiveItemOnHandQty } from "@/lib/item-on-hand";
+import { primarySpareForItem } from "@/lib/inventory-cross-module";
 import {
   useItemSupplierLinks,
   useItemSupplierLinksHydrated,
 } from "@/lib/item-suppliers-store";
 import { useItems, useItemsHydrated } from "@/lib/items-store";
-import { itemDetailsHref } from "@/lib/record-routes";
+import {
+  itemDetailsHref,
+  sparePartDetailsHref,
+} from "@/lib/record-routes";
+import { useSpareParts } from "@/lib/spare-parts-store";
+import { useWarehouseStock } from "@/lib/inventory-stock-store";
 import type { Locale } from "@/types/i18n";
 
 export function SupplierRelatedItemsPanel({
@@ -28,6 +35,8 @@ export function SupplierRelatedItemsPanel({
   const linksHydrated = useItemSupplierLinksHydrated();
   const items = useItems();
   const itemsHydrated = useItemsHydrated();
+  const spareParts = useSpareParts();
+  useWarehouseStock();
 
   const related = useMemo(
     () => links.filter((l) => l.supplierId === supplierId),
@@ -90,6 +99,9 @@ export function SupplierRelatedItemsPanel({
                   {ts(locale, "suppliers.details.items.col.leadTime")}
                 </th>
                 <th className="px-3 py-2.5">
+                  {ts(locale, "suppliers.details.items.col.onHand")}
+                </th>
+                <th className="px-3 py-2.5">
                   {ts(locale, "suppliers.details.items.col.status")}
                 </th>
               </tr>
@@ -97,6 +109,9 @@ export function SupplierRelatedItemsPanel({
             <tbody>
               {related.map((link) => {
                 const item = itemById.get(link.itemId);
+                const spare = item
+                  ? primarySpareForItem(item.id, spareParts)
+                  : undefined;
                 const name = item
                   ? locale === "ar"
                     ? item.nameAr
@@ -133,6 +148,14 @@ export function SupplierRelatedItemsPanel({
                             {name}
                           </span>
                         )}
+                        {spare ? (
+                          <Link
+                            href={sparePartDetailsHref(spare.id)}
+                            className="am-focus-ring text-[11px] font-semibold text-[var(--am-blue-700)] hover:underline"
+                          >
+                            {ts(locale, "suppliers.details.items.viewSpare")}
+                          </Link>
+                        ) : null}
                         {item && item.status !== "active" ? (
                           <span className="text-[11px] text-[var(--am-warning-600)]">
                             {ts(locale, "suppliers.details.items.inactiveItem")}
@@ -166,6 +189,9 @@ export function SupplierRelatedItemsPanel({
                             n: link.leadTimeDays,
                           })
                         : "—"}
+                    </td>
+                    <td className="px-3 py-2.5 font-semibold tabular-nums" dir="ltr">
+                      {item ? effectiveItemOnHandQty(item) : "—"}
                     </td>
                     <td className="px-3 py-2.5">
                       <StatusBadge

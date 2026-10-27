@@ -463,7 +463,7 @@
 | TA-AC-04 | Acceptance Criteria | Product search | Products | NOT_IMPLEMENTED | Repo inspection | — | Missing |
 | TA-AC-05 | Acceptance Criteria | Marine engines management | Engines | PARTIALLY_IMPLEMENTED | system A–J + build 2026-10-27 | `/marine-engines`, store + directory UI | Frontend CRUD + SoT map; no server/authz |
 | TA-AC-06 | Acceptance Criteria | Link parts to engines | Engines | PARTIALLY_IMPLEMENTED | integration tests 2026-10-27 | `syncEngineCompatibleSpares`, `deleteMarineEngineAndUnlink`, spare form | Bidirectional via spare SoT; FE only |
-| TA-AC-07 | Acceptance Criteria | Warehouses management | Warehouses | PARTIALLY_IMPLEMENTED | UI + unit + details 2026-10-27 | `/warehouses`, `/warehouses/[id]` | FE only; detail page ledger-scoped |
+| TA-AC-07 | Acceptance Criteria | Warehouses management | Warehouses | PARTIALLY_IMPLEMENTED | UI + unit + details + cross-module acceptance 2026-10-27 | `/warehouses/[id]`, `inventory-cross-module-acceptance.test.ts` (16) | FE only; see INVENTORY_CROSS_MODULE_ACCEPTANCE_REPORT.md |
 | TA-AC-08 | Acceptance Criteria | Stock in/out/transfer | Inventory | PARTIALLY_IMPLEMENTED | Unit + browser Phase 1 | stock stores + routes | Stocktaking FE closed (TA-AC-09 partial) |
 | TA-AC-09 | Acceptance Criteria | Stocktaking operations | Stocktaking | PARTIALLY_IMPLEMENTED | Unit + UI Phase 2 | `stocktaking-store`, `/stocktaking` | No server authz / multi-user |
 | TA-AC-10 | Acceptance Criteria | Create purchase orders | Purchasing | PARTIALLY_IMPLEMENTED | Repo inspection | PO pages | Mock only; no create |

@@ -72,4 +72,22 @@ describe("warehouse-validation", () => {
     assert.equal(clean.nameAr, "رصيف");
     assert.equal(clean.notes, "note");
   });
+
+  it("scopes wizard step validation", () => {
+    const identity = validateWarehouseForm(
+      form({ nameEn: "", notes: "x".repeat(600) }),
+      "en",
+      { scope: "identity" },
+    );
+    assert.ok(identity.nameEn);
+    assert.equal(identity.notes, undefined);
+
+    const notesOnly = validateWarehouseForm(
+      form({ nameEn: "", notes: "x".repeat(600) }),
+      "en",
+      { scope: "statusNotes" },
+    );
+    assert.equal(notesOnly.nameEn, undefined);
+    assert.ok(notesOnly.notes);
+  });
 });

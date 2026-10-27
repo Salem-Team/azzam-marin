@@ -227,8 +227,10 @@ export type SupplierKey =
   | "suppliers.details.items.col.price"
   | "suppliers.details.items.col.currency"
   | "suppliers.details.items.col.leadTime"
+  | "suppliers.details.items.col.onHand"
   | "suppliers.details.items.col.status"
   | "suppliers.details.items.viewItem"
+  | "suppliers.details.items.viewSpare"
   | "suppliers.details.items.missingItem"
   | "suppliers.details.items.inactiveItem"
   | "suppliers.details.documentsUnavailable"
@@ -633,8 +635,10 @@ const en: Record<SupplierKey, string> = {
   "suppliers.details.items.col.price": "Supplier price",
   "suppliers.details.items.col.currency": "Currency",
   "suppliers.details.items.col.leadTime": "Lead time",
+  "suppliers.details.items.col.onHand": "On hand",
   "suppliers.details.items.col.status": "Link status",
   "suppliers.details.items.viewItem": "View item",
+  "suppliers.details.items.viewSpare": "Open spare part",
   "suppliers.details.items.missingItem": "Missing item record",
   "suppliers.details.items.inactiveItem": "Inactive item",
   "suppliers.details.documentsUnavailable":
@@ -977,8 +981,10 @@ const ar: Record<SupplierKey, string> = {
   "suppliers.details.items.col.price": "سعر المورد",
   "suppliers.details.items.col.currency": "العملة",
   "suppliers.details.items.col.leadTime": "مدة التوريد",
+  "suppliers.details.items.col.onHand": "المتاح",
   "suppliers.details.items.col.status": "حالة الرابط",
   "suppliers.details.items.viewItem": "عرض الصنف",
+  "suppliers.details.items.viewSpare": "فتح قطعة الغيار",
   "suppliers.details.items.missingItem": "سجل الصنف غير موجود",
   "suppliers.details.items.inactiveItem": "صنف غير نشط",
   "suppliers.details.documentsUnavailable":

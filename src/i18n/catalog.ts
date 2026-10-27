@@ -301,6 +301,10 @@ export type CatalogKey =
   | "items.inventory.demoOnHand"
   | "items.inventory.onHand"
   | "items.inventory.linkModule"
+  | "items.inventory.warehouseBalances"
+  | "items.inventory.noBalances"
+  | "items.inventory.warehouse"
+  | "items.inventory.balanceQty"
   | "items.activity.localNote"
   | "items.activity.empty"
   | "items.pricing.historyEmpty"
@@ -419,6 +423,7 @@ export type CatalogKey =
   | "spare.warehouseEmpty"
   | "spare.movementsEmpty"
   | "spare.demoWarehouseNote"
+  | "spare.ledgerWarehouseNote"
   | "spare.movement.date"
   | "spare.movement.type"
   | "spare.movement.qty"
@@ -657,6 +662,8 @@ export type CatalogKey =
   | "xref.col.notes"
   | "xref.col.oem"
   | "xref.col.altOem"
+  | "xref.col.stock"
+  | "xref.col.altStock"
   | "xref.col.mpn"
   | "xref.col.item"
   | "xref.col.codes"
@@ -1046,6 +1053,11 @@ const en: Record<CatalogKey, string> = {
   "items.inventory.demoOnHand": "On hand",
   "items.inventory.onHand": "On hand",
   "items.inventory.linkModule": "Open inventory module",
+  "items.inventory.warehouseBalances": "Warehouse balances",
+  "items.inventory.noBalances":
+    "No warehouse ledger rows for this item yet.",
+  "items.inventory.warehouse": "Warehouse",
+  "items.inventory.balanceQty": "Qty",
   "items.activity.localNote":
     "Local UI activity from this browser store — not the annex server audit log.",
   "items.activity.empty": "No local activity yet.",
@@ -1172,6 +1184,8 @@ const en: Record<CatalogKey, string> = {
   "spare.movementsEmpty": "No stock movements recorded for this part yet.",
   "spare.demoWarehouseNote":
     "Warehouse rows come from the inventory stock store when present — not invented for display.",
+  "spare.ledgerWarehouseNote":
+    "Balances include ledger rows (including zero). Catalog demo qty is not listed as warehouse stock.",
   "spare.movement.date": "Date",
   "spare.movement.type": "Type",
   "spare.movement.qty": "Qty",
@@ -1434,6 +1448,8 @@ const en: Record<CatalogKey, string> = {
   "xref.col.notes": "Notes",
   "xref.col.oem": "OEM / Part number",
   "xref.col.altOem": "Alt. OEM / Part number",
+  "xref.col.stock": "Original on hand",
+  "xref.col.altStock": "Alt. on hand",
   "xref.col.mpn": "MPN",
   "xref.col.item": "Item code",
   "xref.col.codes": "Cross-ref codes",
@@ -1827,6 +1843,10 @@ const ar: Record<CatalogKey, string> = {
   "items.inventory.demoOnHand": "المتاح",
   "items.inventory.onHand": "المتاح",
   "items.inventory.linkModule": "فتح وحدة المخزون",
+  "items.inventory.warehouseBalances": "أرصدة المخازن",
+  "items.inventory.noBalances": "لا توجد صفوف دفتر لهذا الصنف بعد.",
+  "items.inventory.warehouse": "المخزن",
+  "items.inventory.balanceQty": "الكمية",
   "items.activity.localNote":
     "نشاط واجهة محلي من مخزن المتصفح — وليس سجل التدقيق الخادمي في الملحق.",
   "items.activity.empty": "لا يوجد نشاط محلي بعد.",
@@ -1953,6 +1973,8 @@ const ar: Record<CatalogKey, string> = {
   "spare.movementsEmpty": "لا توجد حركات مخزون مسجّلة لهذه القطعة بعد.",
   "spare.demoWarehouseNote":
     "صفوف المخازن تأتي من مخزن أرصدة المخزون عند توفرها — ولا تُختلق للعرض.",
+  "spare.ledgerWarehouseNote":
+    "الأرصدة تشمل صفوف الدفتر (بما فيها الصفر). كمية الكتالوج التجريبية لا تُعرض كرصيد مخزن.",
   "spare.movement.date": "التاريخ",
   "spare.movement.type": "النوع",
   "spare.movement.qty": "الكمية",
@@ -2216,6 +2238,8 @@ const ar: Record<CatalogKey, string> = {
   "xref.col.notes": "ملاحظات",
   "xref.col.oem": "رقم OEM / القطعة",
   "xref.col.altOem": "رقم OEM / القطعة البديلة",
+  "xref.col.stock": "رصيد الأصلي",
+  "xref.col.altStock": "رصيد البديل",
   "xref.col.mpn": "MPN",
   "xref.col.item": "كود الصنف",
   "xref.col.codes": "أكواد مرجعية",

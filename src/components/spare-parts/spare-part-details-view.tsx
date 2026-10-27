@@ -84,6 +84,7 @@ import {
   itemDetailsHref,
   marineEngineDetailsHref,
   sparePartDetailsHref,
+  warehouseDetailsHref,
 } from "@/lib/record-routes";
 import {
   resolveSpareStockBadge,
@@ -315,7 +316,7 @@ function SparePartDetailsInner({ partId }: { partId: string }) {
     item?.status === "active" ? "inactive" : "active";
 
   const itemBalances = item
-    ? balances.filter((b) => b.itemId === item.id && b.qty !== 0)
+    ? balances.filter((b) => b.itemId === item.id)
     : [];
   const itemMovements = item
     ? movements.filter((m) => m.itemId === item.id).slice(0, 12)
@@ -1142,7 +1143,13 @@ function InventoryTab({
         </p>
         <div className="border-t border-[var(--am-border-default)] px-4 py-3">
           <Link
-            href="/warehouses"
+            href={
+              balances[0]
+                ? warehouseDetailsHref(balances[0].warehouseId, {
+                    tab: "items",
+                  })
+                : "/warehouses"
+            }
             className="am-focus-ring inline-flex h-9 w-full items-center justify-center rounded-[var(--am-radius-md)] border border-[var(--am-border-default)] text-[12.5px] font-semibold text-[var(--am-blue-700)] hover:bg-[var(--am-blue-100)]"
           >
             {tc(locale, "items.inventory.linkModule")}
@@ -1711,6 +1718,7 @@ function WarehouseStockCard({
     const wh = warehouses.find((w) => w.id === b.warehouseId);
     return {
       id: `${b.warehouseId}-${b.itemId}`,
+      warehouseId: b.warehouseId,
       name: wh
         ? locale === "ar"
           ? wh.nameAr
@@ -1720,6 +1728,8 @@ function WarehouseStockCard({
     };
   });
   const total = rows.reduce((s, r) => s + r.qty, 0);
+  const noteKey =
+    rows.length > 0 ? "spare.ledgerWarehouseNote" : "spare.demoWarehouseNote";
 
   return (
     <PanelCard title={tc(locale, "spare.section.warehouseStock")}>
@@ -1741,7 +1751,16 @@ function WarehouseStockCard({
             <tbody className="divide-y divide-[var(--am-border-default)]">
               {(compact ? rows.slice(0, 4) : rows).map((row) => (
                 <tr key={row.id}>
-                  <td className="px-3 py-2 font-medium">{row.name}</td>
+                  <td className="px-3 py-2 font-medium">
+                    <Link
+                      href={warehouseDetailsHref(row.warehouseId, {
+                        tab: "items",
+                      })}
+                      className="am-focus-ring text-[var(--am-blue-700)] hover:underline"
+                    >
+                      {row.name}
+                    </Link>
+                  </td>
                   <td
                     className={cn(
                       "px-3 py-2 font-bold tabular-nums",
@@ -1773,7 +1792,7 @@ function WarehouseStockCard({
         </div>
       )}
       <p className="border-t border-[var(--am-border-default)] px-3 py-2 text-[11px] text-[var(--am-text-secondary)]">
-        {tc(locale, "spare.demoWarehouseNote")}
+        {tc(locale, noteKey)}
       </p>
     </PanelCard>
   );
