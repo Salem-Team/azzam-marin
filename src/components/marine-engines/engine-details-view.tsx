@@ -338,7 +338,7 @@ function EngineDetailsInner({ engineId }: { engineId: string }) {
 
       <PageSurface
         fill={false}
-        className="min-w-0 overflow-hidden p-0 shadow-[var(--am-shadow-sm)]"
+        className="min-w-0 overflow-visible p-0 shadow-[var(--am-shadow-sm)]"
       >
         <EngineHeroBand
           engine={engine}
@@ -349,64 +349,51 @@ function EngineDetailsInner({ engineId }: { engineId: string }) {
           onCopySerial={() => void copySerial()}
         />
 
-        <div className="flex items-stretch gap-1 overflow-x-auto overscroll-x-contain border-t border-[var(--am-border-default)] px-2 py-1.5 sm:px-3 [scrollbar-width:thin]">
-          <div
-            role="tablist"
-            aria-label={tc(locale, "engines.details")}
-            className="flex min-w-0 flex-1 gap-0.5"
-          >
-            {TABS.map((t) => {
-              const Icon = t.icon;
-              const active = tab === t.id;
-              const count =
-                t.id === "parts"
-                  ? parts.length
-                  : t.id === "alternatives"
-                    ? alternatives.length
-                    : null;
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  className={cn(
-                    "am-focus-ring inline-flex shrink-0 items-center gap-1.5 rounded-[var(--am-radius-md)] px-3 py-2 text-[12.5px] font-semibold am-transition-colors",
-                    active
-                      ? "bg-[var(--am-navy-900)] text-white shadow-[var(--am-shadow-sm)]"
-                      : "text-[var(--am-text-secondary)] hover:bg-[var(--am-surface-page)] hover:text-[var(--am-navy-900)]",
-                  )}
-                  onClick={() => setTab(t.id)}
-                >
-                  <Icon className="size-3.5 opacity-90" aria-hidden />
-                  {tc(locale, t.labelKey)}
-                  {count != null ? (
-                    <span
-                      className={cn(
-                        "ms-0.5 inline-flex min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold tabular-nums",
-                        active
-                          ? "bg-white/20 text-white"
-                          : "bg-[var(--am-surface-page)] text-[var(--am-navy-900)] ring-1 ring-[var(--am-border-default)]",
-                      )}
-                    >
-                      {count}
-                    </span>
-                  ) : null}
-                </button>
-              );
-            })}
-          </div>
-          <button
-            type="button"
-            className="am-focus-ring ms-auto inline-flex h-9 shrink-0 items-center gap-1.5 self-center rounded-[var(--am-radius-md)] border border-[var(--am-border-default)] bg-[var(--am-surface-raised)] px-2.5 text-[12px] font-semibold text-[var(--am-navy-900)] hover:bg-[var(--am-surface-page)]"
-            onClick={openEdit}
-          >
-            <Link2 className="size-3.5 text-[var(--am-blue-700)]" aria-hidden />
-            <span className="hidden sm:inline">
-              {tc(locale, "engines.detail.manageLinks")}
-            </span>
-          </button>
-        </div>
+        <nav
+          role="tablist"
+          aria-label={tc(locale, "engines.details")}
+          className="flex gap-0.5 overflow-x-auto overscroll-x-contain border-t border-[var(--am-border-default)] px-1.5 py-1.5 sm:px-2 [scrollbar-width:thin]"
+        >
+          {TABS.map((t) => {
+            const Icon = t.icon;
+            const active = tab === t.id;
+            const count =
+              t.id === "parts"
+                ? parts.length
+                : t.id === "alternatives"
+                  ? alternatives.length
+                  : null;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                className={cn(
+                  "am-focus-ring inline-flex shrink-0 items-center gap-1.5 rounded-[var(--am-radius-md)] px-3 py-2 text-[12.5px] font-semibold am-transition-colors",
+                  active
+                    ? "bg-[var(--am-navy-900)] text-white shadow-[var(--am-shadow-sm)]"
+                    : "text-[var(--am-text-secondary)] hover:bg-[var(--am-surface-page)] hover:text-[var(--am-navy-900)]",
+                )}
+                onClick={() => setTab(t.id)}
+              >
+                <Icon className="size-3.5 opacity-90" aria-hidden />
+                {tc(locale, t.labelKey)}
+                {count != null && count > 0 ? (
+                  <span
+                    className={
+                      active
+                        ? "rounded-full bg-white/20 px-1.5 py-px text-[10px] font-bold text-white"
+                        : "rounded-full bg-[var(--am-surface-page)] px-1.5 py-px text-[10px] font-bold text-[var(--am-text-secondary)] ring-1 ring-[var(--am-border-default)]"
+                    }
+                  >
+                    {count}
+                  </span>
+                ) : null}
+              </button>
+            );
+          })}
+        </nav>
 
         <div role="tabpanel" className="min-w-0 border-t border-[var(--am-border-default)] bg-[color-mix(in_srgb,var(--am-surface-page)_28%,white)] p-3 sm:p-4">
           {tab === "overview" ? (
@@ -417,11 +404,7 @@ function EngineDetailsInner({ engineId }: { engineId: string }) {
                   originLabel={originLabel}
                   locale={locale}
                 />
-                <CompatiblePartsTable
-                  parts={parts}
-                  locale={locale}
-                  onManage={openEdit}
-                />
+                <CompatiblePartsTable parts={parts} locale={locale} />
               </div>
               <div className="grid min-w-0 gap-3 content-start">
                 <DescriptionCard engine={engine} locale={locale} />
@@ -444,12 +427,7 @@ function EngineDetailsInner({ engineId }: { engineId: string }) {
           ) : null}
 
           {tab === "parts" ? (
-            <CompatiblePartsTable
-              parts={parts}
-              locale={locale}
-              onManage={openEdit}
-              fill
-            />
+            <CompatiblePartsTable parts={parts} locale={locale} fill />
           ) : null}
 
           {tab === "activity" ? (
@@ -1059,12 +1037,10 @@ function AdditionalCard({
 function CompatiblePartsTable({
   parts,
   locale,
-  onManage,
   fill,
 }: {
   parts: readonly SparePartRecord[];
   locale: Locale;
-  onManage: () => void;
   fill?: boolean;
 }) {
   return (
@@ -1072,26 +1048,14 @@ function CompatiblePartsTable({
       fill={Boolean(fill)}
       className="overflow-hidden p-0 shadow-[var(--am-shadow-sm)]"
     >
-      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--am-border-default)] px-4 py-2.5">
-        <div className="flex min-w-0 items-center gap-2">
-          <Link2 className="size-3.5 shrink-0 text-[var(--am-blue-700)]" aria-hidden />
-          <h2 className="text-[13px] font-bold text-[var(--am-navy-900)]">
-            {tc(locale, "engines.compatibleParts")}
-          </h2>
-          <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-[var(--am-blue-100)] px-1.5 text-[10px] font-bold tabular-nums text-[var(--am-blue-700)]">
-            {parts.length}
-          </span>
-        </div>
-        {fill ? (
-          <button
-            type="button"
-            className="am-focus-ring inline-flex h-8 items-center gap-1.5 rounded-[var(--am-radius-md)] border border-[var(--am-border-default)] bg-[var(--am-surface-raised)] px-2.5 text-[12px] font-semibold hover:bg-[var(--am-surface-page)]"
-            onClick={onManage}
-          >
-            <Pencil className="size-3.5" aria-hidden />
-            {tc(locale, "engines.detail.manageLinks")}
-          </button>
-        ) : null}
+      <header className="flex items-center gap-2 border-b border-[var(--am-border-default)] px-4 py-2.5">
+        <Link2 className="size-3.5 shrink-0 text-[var(--am-blue-700)]" aria-hidden />
+        <h2 className="text-[13px] font-bold text-[var(--am-navy-900)]">
+          {tc(locale, "engines.compatibleParts")}
+        </h2>
+        <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-[var(--am-blue-100)] px-1.5 text-[10px] font-bold tabular-nums text-[var(--am-blue-700)]">
+          {parts.length}
+        </span>
       </header>
       {parts.length === 0 ? (
         <p className="px-4 py-8 text-center text-[12.5px] text-[var(--am-text-secondary)]">
